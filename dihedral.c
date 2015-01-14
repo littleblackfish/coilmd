@@ -1,5 +1,3 @@
-#define MY_PI 3.1415
-
 static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, float cos_shift, float vShift, float rEq, float rCut) {
 	
 	float vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,vb2xm,vb2ym,vb2zm;
@@ -33,7 +31,7 @@ static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, 
 	
 	//scale the coefficient if bond is further than equilibrium distance
 	if (rg > rEq && rg < rCut) {
-	    	rasq = MY_PI / (rCut-rEq); 	//scaling coefficient (use rasq temporarily for efficiency)
+	    	rasq = PI / (rCut-rEq); 	//scaling coefficient (use rasq temporarily for efficiency)
 	    	rbsq = rg - rEq; 		//rdistance from r0   (use rbsq temporarily for efficiency)
 	      	kMult  = 0.5 * ( 1 + cos(rbsq*rasq)) ;
 	    	dkMult = -0.5*rasq * sin(rbsq*rasq)  ;
