@@ -89,30 +89,25 @@ static void integrateLangevin(float dt, float temperature)
 		j=2*i;
 		k=j+1;
 		
-
-		if (!rigid) {
-			if (i>0 && i<N-1) {
-				if  ( harcos(j,k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT) != 0 ) { 
-					isBound[i] = 1;
-					dihedral (2*i-2, j, k, 2*i+3, K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
-					dihedral (2*i+2, j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				}
-				else 
-					isBound[i]=0;
-			}
-	
-			else {
-				harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
-			}
+		// the ends are special, they are non breakable and have no dihedrals
+		
+		if (i == 0 || i == N-1) {
+			harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
 		}
+
+		// others have dihedrals if they are not already broken
+
 		else {
-			printf("rigid\n");
-			harmonic(j,k, K_BOND, INTER_BOND_LENGTH) ;
-			dihedral (2*i-2, j, k, 2*i+3, K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT*10);
-			dihedral (2*i+2, j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT*10);
-			isBound[i] = 1;
+			if  ( harcos(j,k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT) != 0 ) { 
+				isBound[i] = 1;
+				dihedral (2*i-2, j, k, 2*i+3, K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedral (2*i+2, j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			}
+			else 
+				isBound[i]=0;
 		}
-
+	
+		 
 	}
 
 
