@@ -10,10 +10,10 @@ static void integrateLangevin(float dt, float temperature)
 	const float cutsq = HARD_CUT*HARD_CUT;
 	const float randFmult = sqrt(2*temperature*GAMMA*MASS/dt);
 	
-	const float sin1 = sin(PHI_1/180.*PI);
-	const float cos1 = cos(PHI_1/180.*PI);
-	const float sin2 = sin(PHI_2/180.*PI);
-	const float cos2 = cos(PHI_2/180.*PI);
+	const float sin1 = sin(PHI_1/180.*M_PI);
+	const float cos1 = cos(PHI_1/180.*M_PI);
+	const float sin2 = sin(PHI_2/180.*M_PI);
+	const float cos2 = cos(PHI_2/180.*M_PI);
 
 	#pragma omp parallel 
 	{

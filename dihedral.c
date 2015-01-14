@@ -31,7 +31,7 @@ static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, 
 	
 	//scale the coefficient if bond is further than equilibrium distance
 	if (rg > rEq && rg < rCut) {
-	    	rasq = PI / (rCut-rEq); 	//scaling coefficient (use rasq temporarily for efficiency)
+	    	rasq = M_PI / (rCut-rEq); 	//scaling coefficient (use rasq temporarily for efficiency)
 	    	rbsq = rg - rEq; 		//rdistance from r0   (use rbsq temporarily for efficiency)
 	      	kMult  = 0.5 * ( 1 + cos(rbsq*rasq)) ;
 	    	dkMult = -0.5*rasq * sin(rbsq*rasq)  ;

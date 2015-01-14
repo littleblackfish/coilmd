@@ -31,8 +31,6 @@
 #define GAMMA 0.1
 #define TEMP 0.2
 
-#define PI 3.1415
-
 #define MASS K_BOND
 
 static void printMat(float [][3]) ;
@@ -196,7 +194,7 @@ static void genLadder () {
 // generate a twisted DNA polymer
 
 static void genDNA (float pitch) {
-	float theta = 2*PI/pitch;
+	float theta = 2*M_PI/pitch;
 	float stepAngle = 0;
 
 	// shift in y to center 
@@ -205,9 +203,9 @@ static void genDNA (float pitch) {
 
 	for (int i=0; i<N; i++){
 
-		x[2*i][0] = INTER_BOND_LENGTH/2* cos(stepAngle+PI);
+		x[2*i][0] = INTER_BOND_LENGTH/2* cos(stepAngle+M_PI);
 		x[2*i][1] = yshift + i* (INTRA_BOND_LENGTH-0.1);
-		x[2*i][2] = INTER_BOND_LENGTH/2* sin(stepAngle+PI) ;
+		x[2*i][2] = INTER_BOND_LENGTH/2* sin(stepAngle+M_PI) ;
 		
 		x[2*i+1][0] = INTER_BOND_LENGTH/2 *cos(stepAngle) ;
 		x[2*i+1][1] = yshift + i* (INTRA_BOND_LENGTH-0.1);

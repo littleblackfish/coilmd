@@ -31,7 +31,7 @@ static float harcos(int i, int j, float k, float r0,  float rCut) {
 	
 		else if (r<rCut) { 	//this is the cosine part
 	
-			rk = PI / (rCut-r0);
+			rk = M_PI / (rCut-r0);
 	    
 			energy = epsilon * 0.5 * ( 1 - cos(dr*rk)) - epsilon;
 	
