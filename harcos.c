@@ -1,5 +1,5 @@
 
-static float harcos(int i, int j, float k, float r0, float epsilon, float rCut) {	
+static float harcos(int i, int j, float k, float r0,  float rCut) {	
 	float energy;
   	float delx,dely,delz,fmult;
   	float rsq,r,dr,rk;
@@ -14,9 +14,14 @@ static float harcos(int i, int j, float k, float r0, float epsilon, float rCut) 
 	if (rsq < rCut*rCut) {
 
 		r = sqrt(rsq);
+		dr = r - r0;
+		
+		// epsilon = k * (rCut-r0)^2
+		
+		const float epsilon = k*0.01;
+
 	
 		if (r<r0) {  		//this is the harmonic part
-			dr = r - r0;
 			rk = k * dr;
 	
 			fmult = -2.0*rk/r;
@@ -25,7 +30,6 @@ static float harcos(int i, int j, float k, float r0, float epsilon, float rCut) 
 		}
 	
 		else if (r<rCut) { 	//this is the cosine part
-			dr = r - r0;
 	
 			rk = PI / (rCut-r0);
 	    
