@@ -34,18 +34,8 @@
 #define MASS K_BOND
 
 static void printMat(float [][3]) ;
-static void printNeigh();
 static void zero(float [][3]) ;
-static void genLadder();
-static void genDNA(float);
-static void genVel();
-static float randn();
 static float calcTemp();
-static FILE * initVTF();
-static void writeVTF(FILE *);
-static void integrateNVE(float, int, int) ;
-static void integrateLangevin(float, float ) ;
-static void calcNeigh();
 static float ziggurat(int num_thread) ;  
 
 
@@ -66,6 +56,9 @@ static float wn[128];
 // used for SHR3
 static uint32_t *seed;
 
+#include "generators.c"
+#include "neighbour.c"
+#include "vtf.c"
 #include "dihedral.c"
 #include "harmonic.c"
 #include "hardcore.c"
@@ -83,8 +76,6 @@ void main() {
   	
 	int max_threads = omp_get_max_threads();
 	seed = ( uint32_t * ) malloc ( max_threads * sizeof ( uint32_t ) );
-//	printf("max threads : %d\n",max_threads);
-//	omp_set_num_threads(1);
 	
 	for (int thread = 0; thread < max_threads; thread++ ) 
 		seed[thread] = shr3_seeded ( &jsr );
@@ -171,150 +162,6 @@ static void zero(float matrix[][3]) {
 		matrix[i][2]=0;
 	}
 }
-
-/********************* Initial config functions *******************/
-
-// generate a fully extended dna polymer
-
-static void genLadder () {
-	float yshift = -(N-1)*INTRA_BOND_LENGTH/2;
-
-	for (int i=0; i<N; i++){
-
-		x[2*i][0] = - INTER_BOND_LENGTH/2;
-		x[2*i][1] = yshift + i* INTRA_BOND_LENGTH;
-		x[2*i][2] = 0;
-		
-		x[2*i+1][0] = INTER_BOND_LENGTH/2;
-		x[2*i+1][1] = yshift + i* INTRA_BOND_LENGTH;
-		x[2*i+1][2] = 0;
-	}
-}
-
-// generate a twisted DNA polymer
-
-static void genDNA (float pitch) {
-	float theta = 2*M_PI/pitch;
-	float stepAngle = 0;
-
-	// shift in y to center 
-	float yshift = -(N-1)*(INTRA_BOND_LENGTH-0.1)/2;
-	
-
-	for (int i=0; i<N; i++){
-
-		x[2*i][0] = INTER_BOND_LENGTH/2* cos(stepAngle+M_PI);
-		x[2*i][1] = yshift + i* (INTRA_BOND_LENGTH-0.1);
-		x[2*i][2] = INTER_BOND_LENGTH/2* sin(stepAngle+M_PI) ;
-		
-		x[2*i+1][0] = INTER_BOND_LENGTH/2 *cos(stepAngle) ;
-		x[2*i+1][1] = yshift + i* (INTRA_BOND_LENGTH-0.1);
-		x[2*i+1][2] = INTER_BOND_LENGTH/2 *sin (stepAngle);
-
-		stepAngle+=theta;
-	}
-}
-/********************** VTF functions *******************/
-
-// initialize vtf file and return the pointer to the file
-
-static FILE * initVTF() {
-	FILE *vtf;
-
-	vtf=fopen("/tmp/deneme.vtf", "w");
-
-//	fprintf(vtf,"atom 0:%d radius %f name DNA\n", 2*N-1, HARD_CUT/2);
-
-	//write atoms
-	for (int i=0; i<2*N; i++)  
-		fprintf(vtf,"a %d r %f c %d resid %d\n", i, HARD_CUT/2, i%2, i/2);
-	
-	// write bonds
-	for (int i = 0 ; i<N; i++){
-		//intra bonds
-		if ( i < N-1) {
-			fprintf(vtf,"bond %d:%d\n", 2*i, 2*i+2);
-			fprintf(vtf,"bond %d:%d\n", 2*i+1, 2*i+3);
-		}
-		//inter bonds
-		fprintf(vtf,"bond %d:%d\n", 2*i,2*i+1);
-	}
-	return vtf;
-}
-
-// write current timestep to the vtf file 
-
-static void writeVTF(FILE *vtf) {
-	int i;
-	fprintf(vtf,"timestep\n");
-	for (i=0; i<2*N; i++)
-	  fprintf(vtf,"%.3f %.3f %.3f\n",x[i][0],x[i][1],x[i][2]);
-}
-
-/********************* Neighbour functions *******************/
-
-// Neighbour list builder
-
-static void calcNeigh() {
-	int i,j;
-	float del[3], rsq;
-	float cutsq = CUT_NEIGH*CUT_NEIGH;
-
-	// zero neighbour counts	
-	for (i=0;i<2*N;i++) neigh[i][0]=0;
-
-	#pragma omp parallel for private (j,del,rsq)
-	for (i=0 ; i < 2*N; i++) for (j=i+1; j < 2*N; j++) {
-
-		del[0]=x[i][0]-x[j][0];
-		del[1]=x[i][1]-x[j][1];
-		del[2]=x[i][2]-x[j][2];
-
-		rsq= del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
-
-		if (rsq<cutsq) 	neigh[i][ ++ neigh[i][0] ]=j;	
-	}
-}
-
-// Neighbour list printer for debugging 
-
-static void printNeigh() {
-	int numNeigh;
-	for (int i=0; i<2*N; i++) {
-		numNeigh = neigh[i][0];
-		printf("%d (%d) : ", i,numNeigh );
-		for (int j = 1; j<=numNeigh; j++)
-			printf("%d ",neigh[i][j]);
-		printf("\n");
-	}
-	printf("\n");
-}
-
-
-/********************* Integrator functions *******************/
-
-// Velocity Verlet integration
-
-static void integrateNVE(float dt, int begin, int shift) {
-	
-	int j;
-
-	float mult=0.5*dt/MASS;
-	
-	for (int i=begin; i<2*N; i+=shift) for (j=0; j<3; j++) {
-		x[i][j]+= v[i][j]*dt + f[i][j]*mult*dt;
-		v[i][j]+= f[i][j]*mult;
-	}
-
-//	calcForce();
-
-	for (int i=begin; i<2*N; i+=shift) 
-		for (j=0; j<3; j++) 
-			v[i][j] += f[i][j]*mult;
-}
-
-
-
 
 static float calcTemp () {
 	kinE=0;
