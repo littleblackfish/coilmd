@@ -61,5 +61,3 @@ static void writeRestart(char * filename) {
 
 	fclose (restart);
 }
-
-

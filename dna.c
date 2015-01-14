@@ -68,7 +68,6 @@ static uint32_t *seed;
 #include "hardcore.c"
 #include "harcos.c"
 
-static int rigid = 0;
 #include "langevin.c"
 
 
