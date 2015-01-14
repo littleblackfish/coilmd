@@ -1,10 +1,10 @@
 
 // initialize vtf file and return the pointer to the file
 
-static FILE * initVTF() {
+static FILE * initVTF( char filename[]) {
 	FILE *vtf;
 
-	vtf=fopen("/tmp/deneme.vtf", "w");
+	vtf=fopen(filename, "w");
 
 //	fprintf(vtf,"atom 0:%d radius %f name DNA\n", 2*N-1, HARD_CUT/2);
 

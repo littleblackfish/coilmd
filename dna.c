@@ -59,6 +59,7 @@ static float wn[128];
 // used for SHR3
 static uint32_t *seed;
 
+#include "restart.c"
 #include "generators.c"
 #include "neighbour.c"
 #include "vtf.c"
@@ -71,8 +72,15 @@ static int rigid = 0;
 #include "langevin.c"
 
 
-void main() {
-       
+void main(int argc, char ** argv ) {
+
+	if (argc<2)  {
+		printf("I cannot run without temperature.\n");
+		exit(1);
+	}
+
+	float temperature = atof (argv[1]);
+
 	// seeding a random stream for each thread
 	r4_nor_setup ( kn, fn, wn );
 	uint32_t  jsr = 123456;
@@ -89,10 +97,15 @@ void main() {
 	zero(f);
 	zero(v);
 
+	writeRestart("restart.dat");
+	readRestart ("restart.dat");
+	writeRestart("restart2.dat");
+
 	isBound[0]=1;
 	isBound[N-1]=1;
 
-	FILE *vtf = initVTF();
+	FILE *minim = initVTF("/tmp/minim.vtf"); 
+	FILE *traj  = initVTF("/tmp/traj.vtf");
 	FILE *bubbles = fopen("/tmp/bubbles.dat", "w");
 
 	// minimization via Langevin at 0 temperature
@@ -100,12 +113,12 @@ void main() {
 	for (int t=0; t<100000; t++){
 		integrateLangevin(0.001,0);
 		if (t%1000 ==0)
-			writeVTF(vtf);
+			writeVTF(minim);
 	}
 
 	for (int t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
-		integrateLangevin(0.1, TEMP);
+		integrateLangevin(0.1, temperature);
 //		integrateNVE(0.001,0,1);
 
 		if (t%100 == 0) {
@@ -130,14 +143,15 @@ void main() {
 
 			
 		//	printNeigh();
-			writeVTF(vtf);
+			writeVTF(traj);
 		}
 	}
 	
 	printf("\n");
 
 	free(seed);
-	fclose(vtf);
+	fclose(traj);
+	fclose(minim);
 	fclose(bubbles);
 
 }
