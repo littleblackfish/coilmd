@@ -6,25 +6,34 @@
 
 #include "ziggurat_openmp.c"
 
-#define N 100
+#define N 1000
 #define NSTEPS 10000000
-#define MASS 100
+
 #define INTRA_BOND_LENGTH 0.5
 #define INTER_BOND_LENGTH 1.1
+
+#define SKIN 0.1
+
 #define INTER_BOND_CUT 1.2
+#define HARD_CUT 0.4
+
 #define K_BOND 100
-#define K_HARD 100
-#define K_DIHEDRAL 20
+
+#define PHI_1 -100
+#define PHI_2 -95
+
+#define K_DIHEDRAL 10
+#define EPSILON_DIHEDRAL 1
+
 #define MAX_NEIGH 2*N-1
 #define CUT_NEIGH 2.0
-#define CUT_HARD 0.4
-#define EPSILON 6
-#define VSHIFT 1
 
 #define GAMMA 0.1
-#define TEMP 1
+#define TEMP 0.2
 
 #define PI 3.1415
+
+#define MASS K_BOND
 
 static void printMat(float [][3]) ;
 static void printNeigh();
@@ -37,7 +46,7 @@ static float calcTemp();
 static FILE * initVTF();
 static void writeVTF(FILE *);
 static void integrateNVE(float, int, int) ;
-static void integrateLangevin(float ) ;
+static void integrateLangevin(float, float ) ;
 static void calcNeigh();
 static float ziggurat(int num_thread) ;  
 
@@ -64,6 +73,9 @@ static uint32_t *seed;
 #include "hardcore.c"
 #include "harcos.c"
 
+static int rigid = 0;
+#include "langevin.c"
+
 
 void main() {
        
@@ -74,7 +86,7 @@ void main() {
 	int max_threads = omp_get_max_threads();
 	seed = ( uint32_t * ) malloc ( max_threads * sizeof ( uint32_t ) );
 //	printf("max threads : %d\n",max_threads);
-	omp_set_num_threads(2);
+//	omp_set_num_threads(1);
 	
 	for (int thread = 0; thread < max_threads; thread++ ) 
 		seed[thread] = shr3_seeded ( &jsr );
@@ -91,13 +103,17 @@ void main() {
 	FILE *vtf = initVTF();
 	FILE *bubbles = fopen("/tmp/bubbles.dat", "w");
 
+	// minimization via Langevin at 0 temperature
+	
 	for (int t=0; t<100000; t++){
-		integrateLangevin(0.001);
+		integrateLangevin(0.001,0);
+		if (t%1000 ==0)
+			writeVTF(vtf);
 	}
 
 	for (int t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
-		integrateLangevin(0.01);
+		integrateLangevin(0.1, TEMP);
 //		integrateNVE(0.001,0,1);
 
 		if (t%100 == 0) {
@@ -209,11 +225,11 @@ static FILE * initVTF() {
 
 	vtf=fopen("/tmp/deneme.vtf", "w");
 
-//	fprintf(vtf,"atom 0:%d radius %f name DNA\n", 2*N-1, CUT_HARD/2);
+//	fprintf(vtf,"atom 0:%d radius %f name DNA\n", 2*N-1, HARD_CUT/2);
 
 	//write atoms
 	for (int i=0; i<2*N; i++)  
-		fprintf(vtf,"a %d r %f c %d resid %d\n", i, CUT_HARD/2, i%2, i/2);
+		fprintf(vtf,"a %d r %f c %d resid %d\n", i, HARD_CUT/2, i%2, i/2);
 	
 	// write bonds
 	for (int i = 0 ; i<N; i++){
@@ -300,141 +316,6 @@ static void integrateNVE(float dt, int begin, int shift) {
 }
 
 
-// Velocity Verlet integration with Langevin EoM
-
-static void integrateLangevin(float dt) {
-	
-	const float halfdtgamma = 0.5*GAMMA*dt;
-	const float halfdtgammanorm = 1/(1+halfdtgamma);
-	const float halfdtMass = 0.5*dt/MASS;
-	const float cutsq = CUT_HARD*CUT_HARD;
-	
-	const float sin1 = sin(85/180.*PI);
-	const float cos1 = cos(85/180.*PI);
-	const float sin2 = sin(105/180.*PI);
-	const float cos2 = cos(105/180.*PI);
-
-	#pragma omp parallel 
-	{
-	
-	int thread_num = omp_get_thread_num();
-	int num_threads = omp_get_num_threads();
-	int i,j,k;
-	float del[3],norm,rsq;
-
-	uint32_t myseed = seed[thread_num];
-	
-	const float randFmult = sqrt(2*TEMP*GAMMA*MASS/dt);
-	
-	#pragma omp for	schedule(static)
-	for (i=0; i<2*N; i++) {
-
-		// updating velocity by half a step
-		// v = v(t+0.5dt)
-		
-		v[i][0] -= halfdtgamma*v[i][0];
-		v[i][1] -= halfdtgamma*v[i][1];
-		v[i][2] -= halfdtgamma*v[i][2];
-
-		v[i][0] += halfdtMass*f[i][0];
-		v[i][1] += halfdtMass*f[i][1];
-		v[i][2] += halfdtMass*f[i][2];
-
-		// updating position by a full step
-		// x = x(t+dt)
-		
-		x[i][0]+= v[i][0]*dt ;
-		x[i][1]+= v[i][1]*dt ;
-		x[i][2]+= v[i][2]*dt ;
-
-	}
-
-	
-	// calculate forces for the next timestep
-	// f = f(t+dt)
-	
-/********************* BEGIN FORCE CALCULATION ***********************/
-
-	// Initialize with random forces instead of zeros 
-	
-	#pragma omp for	schedule(static)
-	for (int i=0; i<2*N; i++) {
-		f[i][0]=ziggurat(thread_num)*randFmult;
-		f[i][1]=ziggurat(thread_num)*randFmult;
-		f[i][2]=ziggurat(thread_num)*randFmult;
-		
-//		f[i][0]=r4_nor(&myseed, kn,fn,wn)*randFmult;
-//		f[i][1]=r4_nor(&myseed, kn,fn,wn)*randFmult;
-//		f[i][2]=r4_nor(&myseed, kn,fn,wn)*randFmult;
-		
-//		printf("%d\t%d\t%f\n",thread_num,i,ziggurat(thread_num) );
-//		printf("%d\t%d\t%f\n",thread_num,i,r4_nor(&myseed, kn,fn,wn) );
-	}
-
-//	seed[thread_num]=myseed;
-
-
-	// Calculate forces from intra-strand bonds
-	
-	#pragma omp for	schedule(static)
-
-	for (i=0; i<2*N-2; i++) {
-		harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
-	}
-
-	// Calculate forces from inter-strand interaction
-	
-	#pragma omp for
-	for (i=0; i<N; i++) {
-		j=2*i;
-		k=j+1;
-		
-		//inter-strand dihedrals 
-
-		if (i>0 && i<N-1) {
-			if  ( harcos(j,k, K_BOND, INTER_BOND_LENGTH, EPSILON, INTER_BOND_CUT) != 0 ) { 
-				isBound[i] = 1;
-				dihedral (2*i-2, j, k, 2*i+3, K_DIHEDRAL, sin1, cos1, VSHIFT, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedral (2*i+2, j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, VSHIFT, INTER_BOND_LENGTH, INTER_BOND_CUT);
-			}
-			else 
-				isBound[i]=0;
-		}
-
-		else {
-			harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
-		}
-	}
-
-
-	// Calculate forces form hard-core repulsion
-	
-	#pragma omp for	
-	for (i=0; i<2*N; i++) for (k=1; k<neigh[i][0]+1;k++) {
-//		printf("%d ", neigh[i][0]);
-		j=neigh[i][k];
-		hardcore(i, j, K_HARD, CUT_HARD, cutsq);
-
-	}
-
-/****************** END OF FORCE CALCULATION **************************/
-	
-	
-	// final update on velocity 
-	// v = v(t+dt)
-	#pragma omp for schedule(static)	
-	for (i=0; i<2*N; i++)  { 
-
-			v[i][0] += f[i][0]*halfdtMass ;
-			v[i][1] += f[i][1]*halfdtMass ;
-			v[i][2] += f[i][2]*halfdtMass ;
-			
-			v[i][0] *=halfdtgammanorm;
-                        v[i][1] *=halfdtgammanorm;
-	                v[i][2] *=halfdtgammanorm;
-	}
-	}
-}
 
 
 static float calcTemp () {
