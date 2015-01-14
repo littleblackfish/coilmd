@@ -1,7 +1,6 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
-#include "stdbool.h"
 #include "omp.h"
 
 #include "ziggurat_openmp.c"
@@ -47,7 +46,7 @@ float x[2*N][3];
 float v[2*N][3];
 float f[2*N][3];
 int neigh[2*N][MAX_NEIGH+1];
-bool isBound[N];
+int isBound[N];
 
 // used for ziggurat
 static float fn[128];
