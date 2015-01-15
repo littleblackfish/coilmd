@@ -9,7 +9,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define N 1000
+#define N 100
 #define NSTEPS 10000000
 
 #define INTRA_BOND_LENGTH 0.5
@@ -40,7 +40,6 @@ static void printMat(float [][3]) ;
 static void zero(float [][3]) ;
 static float calcTemp();
 static float ziggurat(int num_thread) ;  
-
 
 // global variables
 
@@ -96,10 +95,6 @@ void main(int argc, char ** argv ) {
 	zero(f);
 	zero(v);
 
-	writeRestart("restart.dat");
-	readRestart ("restart.dat");
-	writeRestart("restart2.dat");
-
 	isBound[0]=1;
 	isBound[N-1]=1;
 
@@ -109,18 +104,21 @@ void main(int argc, char ** argv ) {
 
 	// minimization via Langevin at 0 temperature
 	
-	for (int t=0; t<100000; t++){
+	printf ("Minimization...");
+	fflush(stdout);
+	for (int t=0; t<10000; t++){
 		integrateLangevin(0.001,0);
 		if (t%1000 ==0)
 			writeVTF(minim);
 	}
+	printf ("done.\n");
+	fflush(stdout);
 
 	for (int t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
 		integrateLangevin(0.1, temperature);
-//		integrateNVE(0.001,0,1);
 
-		if (t%100 == 0) {
+		if (t%10 == 0) {
 //			printf("Calculating neighbors\n");
 			calcNeigh();
 		}
@@ -152,7 +150,6 @@ void main(int argc, char ** argv ) {
 	fclose(traj);
 	fclose(minim);
 	fclose(bubbles);
-
 }
 
 static float ziggurat(int thread_num) {  
