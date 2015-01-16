@@ -43,7 +43,7 @@ static float ziggurat(int num_thread) ;
 
 // global variables
 
-float potE, kinE, temp;
+float intraE, interE, dihedralE, hardE;
 
 float x[2*N][3];
 float v[2*N][3];
@@ -98,9 +98,11 @@ void main(int argc, char ** argv ) {
 	isBound[0]=1;
 	isBound[N-1]=1;
 
-	FILE *minim = initVTF("/tmp/minim.vtf"); 
-	FILE *traj  = initVTF("/tmp/traj.vtf");
-	FILE *bubbles = fopen("/tmp/bubbles.dat", "w");
+	FILE *minim = initVTF("minim.vtf"); 
+	FILE *traj  = initVTF("traj.vtf");
+	FILE *energy  =	fopen("energy.dat", "w"); 
+	FILE *bubbles =	fopen("bubbles.dat", "w");
+	
 
 	// minimization via Langevin at 0 temperature
 	
@@ -116,12 +118,14 @@ void main(int argc, char ** argv ) {
 
 	for (int t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
-		integrateLangevin(0.1, temperature);
+		integrateLangevin(0.01, temperature);
 
-		if (t%10 == 0) {
+		calcNeigh();
+		
+		//if (t%10 == 0) {
 //			printf("Calculating neighbors\n");
-			calcNeigh();
-		}
+		//	calcNeigh();
+		//}
 
 		if (t%1000 ==0) {
 //		if (1) {
@@ -130,9 +134,14 @@ void main(int argc, char ** argv ) {
 			printf("\rstep %d",t);
 			fflush(stdout);
 
+
 			for (int i=0; i<N; i++) fprintf(bubbles,"%d ", isBound[i]) ;
 			fprintf(bubbles, "\n");
 			fflush(bubbles);
+
+			// print energy
+
+			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
 
 //			for (int i=0; i<N; i++) 
 //				printf("%d ", neigh[i][0]);
@@ -149,7 +158,9 @@ void main(int argc, char ** argv ) {
 	free(seed);
 	fclose(traj);
 	fclose(minim);
+	fclose(energy);
 	fclose(bubbles);
+
 }
 
 static float ziggurat(int thread_num) {  
@@ -177,8 +188,9 @@ static void zero(float matrix[][3]) {
 }
 
 static float calcTemp () {
-	kinE=0;
+	float kinE=0;
 
+	#pragma omp parallel for reduction(+:kinE)
 	for (int i=0; i<2*N; i++) {
 		kinE += v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
 	}

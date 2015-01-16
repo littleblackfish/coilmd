@@ -15,6 +15,13 @@ static void integrateLangevin(float dt, float temperature)
 	const float sin2 = sin(PHI_2/180.*M_PI);
 	const float cos2 = cos(PHI_2/180.*M_PI);
 
+	intraE=0;
+	interE=0;
+	hardE=0;
+	dihedralE=0;
+	
+	
+
 	#pragma omp parallel 
 	{
 	
@@ -22,6 +29,7 @@ static void integrateLangevin(float dt, float temperature)
 	int num_threads = omp_get_num_threads();
 	int i,j,k;
 	float del[3],norm,rsq;
+	float inter;
 
 	uint32_t myseed = seed[thread_num];
 	
@@ -76,15 +84,15 @@ static void integrateLangevin(float dt, float temperature)
 
 	// Calculate forces from intra-strand bonds
 	
-	#pragma omp for	schedule(static)
+	#pragma omp for	schedule(static) reduction(+:intraE)
 
 	for (i=0; i<2*N-2; i++) {
-		harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
 	}
 
 	// Calculate forces from inter-strand interaction
 	
-	#pragma omp for
+	#pragma omp for reduction(+:interE,dihedralE)
 	for (i=0; i<N; i++) {
 		j=2*i;
 		k=j+1;
@@ -98,10 +106,13 @@ static void integrateLangevin(float dt, float temperature)
 		// others have dihedrals if they are not already broken
 
 		else {
-			if  ( harcos(j,k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT) != 0 ) { 
+			inter = harcos(j,k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+
+			if  ( inter != 0 ) { 
+				interE += inter;
 				isBound[i] = 1;
-				dihedral (2*i-2, j, k, 2*i+3, K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedral (2*i+2, j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (2*i-2, j, k, 2*i+3, K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (2*i+2, j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
 			}
 			else 
 				isBound[i]=0;
@@ -113,11 +124,11 @@ static void integrateLangevin(float dt, float temperature)
 
 	// Calculate forces form hard-core repulsion
 	
-	#pragma omp for	
+	#pragma omp for	reduction(+:hardE)
 	for (i=0; i<2*N; i++) for (k=1; k<neigh[i][0]+1;k++) {
 //		printf("%d ", neigh[i][0]);
 		j=neigh[i][k];
-		hardcore(i, j, K_BOND, HARD_CUT, cutsq);
+		hardE += hardcore(i, j, K_BOND, HARD_CUT, cutsq);
 
 	}
 
