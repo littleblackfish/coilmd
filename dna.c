@@ -128,20 +128,18 @@ void main(int argc, char ** argv ) {
 
 		if (calcNeigh()) { 
 			rebuildCount ++;
-			printNeighCount(neighCount); 
-			fflush(neighCount);
-		}
-
-		if (t%10 ==0) {
-			for (i=0; i<N; i++) 
-				fprintf(bubbles,"%d ", isBound[i]) ;
-			fprintf(bubbles, "\n");
-			fflush(bubbles);
+	//		printNeighCount(neighCount); 
+	//		fflush(neighCount);
 		}
 
 		if (t%1000 ==0) {
 //		if (1) {
 			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);fflush(stdout);
+
+			for (i=0; i<N; i++) 
+				fprintf(bubbles,"%d ", isBound[i]) ;
+			fprintf(bubbles, "\n");
+			fflush(bubbles);
 
 			// print energy
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
