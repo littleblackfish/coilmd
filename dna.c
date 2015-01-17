@@ -9,8 +9,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define N 100
-#define NSTEPS 1000000
+#define N 200
+#define NSTEPS 10000000
 
 #define INTRA_BOND_LENGTH 0.5
 #define INTER_BOND_LENGTH 1.1

@@ -32,9 +32,6 @@ static void integrateLangevin(float dt, float temperature)
 	float del[3],norm,rsq;
 	float inter;
 
-	uint32_t myseed = seed[thread_num];
-	
-	
 	#pragma omp for	schedule(static)
 	for (i=0; i<2*N; i++) {
 
@@ -71,22 +68,11 @@ static void integrateLangevin(float dt, float temperature)
 		f[i][0]=ziggurat(thread_num)*randFmult;
 		f[i][1]=ziggurat(thread_num)*randFmult;
 		f[i][2]=ziggurat(thread_num)*randFmult;
-		
-//		f[i][0]=r4_nor(&myseed, kn,fn,wn)*randFmult;
-//		f[i][1]=r4_nor(&myseed, kn,fn,wn)*randFmult;
-//		f[i][2]=r4_nor(&myseed, kn,fn,wn)*randFmult;
-		
-//		printf("%d\t%d\t%f\n",thread_num,i,ziggurat(thread_num) );
-//		printf("%d\t%d\t%f\n",thread_num,i,r4_nor(&myseed, kn,fn,wn) );
 	}
-
-//	seed[thread_num]=myseed;
-
 
 	// Calculate forces from intra-strand bonds
 	
 	#pragma omp for	schedule(static) reduction(+:intraE)
-
 	for (i=0; i<2*N-2; i++) {
 		intraE += harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
 	}
