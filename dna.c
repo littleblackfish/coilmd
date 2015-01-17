@@ -61,6 +61,7 @@ static uint32_t *seed;
 
 static const float neighCutSq  = NEIGH_CUT * NEIGH_CUT ;
 static const float neighSkinSq = (NEIGH_CUT-HARD_CUT) * (NEIGH_CUT - HARD_CUT) ;
+static const float hardCutSq = HARD_CUT*HARD_CUT;
 
 #include "restart.c"
 #include "generators.c"
@@ -70,9 +71,7 @@ static const float neighSkinSq = (NEIGH_CUT-HARD_CUT) * (NEIGH_CUT - HARD_CUT) ;
 #include "harmonic.c"
 #include "hardcore.c"
 #include "harcos.c"
-
 #include "langevin.c"
-
 
 void main(int argc, char ** argv ) {
 	
@@ -82,6 +81,8 @@ void main(int argc, char ** argv ) {
 	}
 
 	float temperature = atof (argv[1]);
+	
+	int t, i, rebuildCount = 0; 
 
 	// seeding a random stream for each thread
 	r4_nor_setup ( kn, fn, wn );
@@ -90,8 +91,8 @@ void main(int argc, char ** argv ) {
 	int max_threads = omp_get_max_threads();
 	seed = ( uint32_t * ) malloc ( max_threads * sizeof ( uint32_t ) );
 	
-	for (int thread = 0; thread < max_threads; thread++ ) 
-		seed[thread] = shr3_seeded ( &jsr );
+	for (i=0; i < max_threads; i++ ) 
+		seed[i] = shr3_seeded ( &jsr );
 
 //	genVel();
 //	genLadder();
@@ -113,16 +114,15 @@ void main(int argc, char ** argv ) {
 	// minimization via Langevin at 0 temperature
 	
 //	printf ("Minimization...");fflush(stdout);
-	for (int t=0; t<10000; t++){
+	for (t=0; t<10000; t++){
 		integrateLangevin(0.001,0);
 		if (t%1000 ==0)
 			writeVTF(minim);
 	}
 //	printf ("done.\n");fflush(stdout);
 
-	int rebuildCount = 0; 
 
-	for (int t=0; t<NSTEPS; t++){
+	for (t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
 		integrateLangevin(0.1, temperature);
 
@@ -133,7 +133,7 @@ void main(int argc, char ** argv ) {
 		}
 
 		if (t%10 ==0) {
-			for (int i=0; i<N; i++) 
+			for (i=0; i<N; i++) 
 				fprintf(bubbles,"%d ", isBound[i]) ;
 			fprintf(bubbles, "\n");
 			fflush(bubbles);
@@ -141,14 +141,10 @@ void main(int argc, char ** argv ) {
 
 		if (t%1000 ==0) {
 //		if (1) {
-			
 			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);fflush(stdout);
 
 			// print energy
-
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
-
-				
 			writeVTF(traj);
 		}
 	}
@@ -192,9 +188,10 @@ static void zero(float matrix[][3]) {
 
 static float calcTemp () {
 	float kinE=0;
+	int i;
 
 	#pragma omp parallel for reduction(+:kinE)
-	for (int i=0; i<2*N; i++) {
+	for (i=0; i<2*N; i++) {
 		kinE += v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
 	}
 

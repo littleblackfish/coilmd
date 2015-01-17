@@ -57,11 +57,11 @@ static int calcNeigh() {
 // Neighbour list printer for debugging 
 
 static void printNeigh() {
-	int numNeigh;
-	for (int i=0; i<2*N; i++) {
+	int numNeigh,i,j;
+	for (i=0; i<2*N; i++) {
 		numNeigh = neigh[i][0];
 		printf("%d (%d) : ", i,numNeigh );
-		for (int j = 1; j<=numNeigh; j++)
+		for (j = 1; j<=numNeigh; j++)
 			printf("%d ",neigh[i][j]);
 		printf("\n");
 	}
@@ -71,7 +71,8 @@ static void printNeigh() {
 // Neighbour count printer for load balance benchmarking
 
 static void printNeighCount(FILE *f) {
-	for (int i=0; i<N; i++) 
+	int i;
+	for (i=0; i<N; i++) 
 		fprintf(f,"%d ", neigh[i][0]);
 	fprintf(f,"\n");
 }

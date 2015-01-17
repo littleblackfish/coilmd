@@ -7,7 +7,6 @@ static void integrateLangevin(float dt, float temperature)
 	const float halfdtgamma = 0.5*GAMMA*dt;
 	const float halfdtgammanorm = 1/(1+halfdtgamma);
 	const float halfdtMass = 0.5*dt/MASS;
-	const float cutsq = HARD_CUT*HARD_CUT;
 	const float randFmult = sqrt(2*temperature*GAMMA*MASS/dt);
 	
 	const float sin1 = sin(PHI_1/180.*M_PI);
@@ -15,6 +14,8 @@ static void integrateLangevin(float dt, float temperature)
 	const float sin2 = sin(PHI_2/180.*M_PI);
 	const float cos2 = cos(PHI_2/180.*M_PI);
 
+	//reset energy
+	
 	intraE=0;
 	interE=0;
 	hardE=0;
@@ -66,7 +67,7 @@ static void integrateLangevin(float dt, float temperature)
 	// Initialize with random forces instead of zeros 
 	
 	#pragma omp for	schedule(static)
-	for (int i=0; i<2*N; i++) {
+	for (i=0; i<2*N; i++) {
 		f[i][0]=ziggurat(thread_num)*randFmult;
 		f[i][1]=ziggurat(thread_num)*randFmult;
 		f[i][2]=ziggurat(thread_num)*randFmult;
@@ -128,8 +129,7 @@ static void integrateLangevin(float dt, float temperature)
 	for (i=0; i<2*N; i++) for (k=1; k<neigh[i][0]+1;k++) {
 //		printf("%d ", neigh[i][0]);
 		j=neigh[i][k];
-		hardE += hardcore(i, j, K_BOND, HARD_CUT, cutsq);
-
+		hardE += hardcore(i, j, K_BOND, HARD_CUT);
 	}
 
 /****************** END OF FORCE CALCULATION **************************/

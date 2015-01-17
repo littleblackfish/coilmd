@@ -4,8 +4,9 @@
 
 static void genLadder () {
 	float yshift = -(N-1)*INTRA_BOND_LENGTH/2;
+	int i;
 
-	for (int i=0; i<N; i++){
+	for (i=0; i<N; i++){
 
 		x[2*i][0] = - INTER_BOND_LENGTH/2;
 		x[2*i][1] = yshift + i* INTRA_BOND_LENGTH;
@@ -25,9 +26,10 @@ static void genDNA (float pitch) {
 
 	// shift in y to center 
 	float yshift = -(N-1)*(INTRA_BOND_LENGTH-0.1)/2;
+	int i;
 	
 
-	for (int i=0; i<N; i++){
+	for (i=0; i<N; i++){
 
 		x[2*i][0] = INTER_BOND_LENGTH/2* cos(stepAngle+M_PI);
 		x[2*i][1] = yshift + i* (INTRA_BOND_LENGTH-0.1);

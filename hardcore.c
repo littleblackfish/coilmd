@@ -5,7 +5,7 @@
 // else
 // 	V = 0 , F = 0
 
-static float hardcore(int i, int j, float k, float r0, float cutsq) {
+static float hardcore(int i, int j, float k, float r0 ) {
 
 	float del[3], r, dr, kdr, rsq, fmult;
 	
@@ -15,7 +15,7 @@ static float hardcore(int i, int j, float k, float r0, float cutsq) {
 
 	rsq = del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
 
-	if ( rsq<cutsq ) {
+	if ( rsq<hardCutSq ) {
 
 		r  = sqrt(rsq);
 		dr = r-r0;
