@@ -33,6 +33,7 @@
 #define MAX_NEIGH 27
 
 #define GAMMA 0.1
+#define DT 0.05
 
 static void printMat(float [][3]) ;
 static void zero(float [][3]) ;
@@ -124,7 +125,7 @@ void main(int argc, char ** argv ) {
 
 	for (t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
-		integrateLangevin(0.1, temperature);
+		integrateLangevin(DT, temperature);
 
 		if (calcNeigh()) { 
 			rebuildCount ++;
