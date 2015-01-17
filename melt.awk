@@ -1,0 +1,2 @@
+#!/bin/env awk
+awk '{for (i=1; i<=NF; i++) s=s+$i}; END{print 1-s/NR/NF}'
