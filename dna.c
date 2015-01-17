@@ -10,17 +10,16 @@
 #endif
 
 #define N 100
-#define NSTEPS 10000000
+#define NSTEPS 1000000
 
 #define INTRA_BOND_LENGTH 0.5
 #define INTER_BOND_LENGTH 1.1
-
-#define SKIN 0.1
 
 #define INTER_BOND_CUT 1.2
 #define HARD_CUT 0.4
 
 #define K_BOND 100
+#define MASS K_BOND
 
 #define PHI_1 -100
 #define PHI_2 -95
@@ -28,13 +27,12 @@
 #define K_DIHEDRAL 10
 #define EPSILON_DIHEDRAL 1
 
-#define MAX_NEIGH 2*N-1
-#define CUT_NEIGH 2.0
+#define NEIGH_CUT 1.2
+
+// (NEIGH_CUT/HARD_CUT)^3
+#define MAX_NEIGH 100
 
 #define GAMMA 0.1
-#define TEMP 0.2
-
-#define MASS K_BOND
 
 static void printMat(float [][3]) ;
 static void zero(float [][3]) ;
@@ -46,6 +44,7 @@ static float ziggurat(int num_thread) ;
 float intraE, interE, dihedralE, hardE;
 
 float x[2*N][3];
+float xRef[2*N][3];
 float v[2*N][3];
 float f[2*N][3];
 int neigh[2*N][MAX_NEIGH+1];
@@ -57,6 +56,11 @@ static uint32_t kn[128];
 static float wn[128];
 // used for SHR3
 static uint32_t *seed;
+
+// some constants for performance 
+
+static const float neighCutSq  = NEIGH_CUT * NEIGH_CUT ;
+static const float neighSkinSq = (NEIGH_CUT-HARD_CUT) * (NEIGH_CUT - HARD_CUT) ;
 
 #include "restart.c"
 #include "generators.c"
@@ -71,7 +75,7 @@ static uint32_t *seed;
 
 
 void main(int argc, char ** argv ) {
-
+	
 	if (argc<2)  {
 		printf("I cannot run without temperature.\n");
 		exit(1);
@@ -94,6 +98,7 @@ void main(int argc, char ** argv ) {
 	genDNA(10.5);
 	zero(f);
 	zero(v);
+	zero(xRef);
 
 	isBound[0]=1;
 	isBound[N-1]=1;
@@ -101,64 +106,62 @@ void main(int argc, char ** argv ) {
 	FILE *minim = initVTF("minim.vtf"); 
 	FILE *traj  = initVTF("traj.vtf");
 	FILE *energy  =	fopen("energy.dat", "w"); 
+	FILE *neighCount   = fopen("neigh.dat", "w");
 	FILE *bubbles =	fopen("bubbles.dat", "w");
 	
 
 	// minimization via Langevin at 0 temperature
 	
-	printf ("Minimization...");
-	fflush(stdout);
+//	printf ("Minimization...");fflush(stdout);
 	for (int t=0; t<10000; t++){
 		integrateLangevin(0.001,0);
 		if (t%1000 ==0)
 			writeVTF(minim);
 	}
-	printf ("done.\n");
-	fflush(stdout);
+//	printf ("done.\n");fflush(stdout);
+
+	int rebuildCount = 0; 
 
 	for (int t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
-		integrateLangevin(0.01, temperature);
+		integrateLangevin(0.1, temperature);
 
-		calcNeigh();
-		
-		//if (t%10 == 0) {
-//			printf("Calculating neighbors\n");
-		//	calcNeigh();
-		//}
+		if (calcNeigh()) { 
+			rebuildCount ++;
+			printNeighCount(neighCount); 
+			fflush(neighCount);
+		}
+
+		if (t%10 ==0) {
+			for (int i=0; i<N; i++) 
+				fprintf(bubbles,"%d ", isBound[i]) ;
+			fprintf(bubbles, "\n");
+			fflush(bubbles);
+		}
 
 		if (t%1000 ==0) {
 //		if (1) {
-	//		temp=calcTemp();
-	//		printf("step %d, temp %f\n",t,temp);
-			printf("\rstep %d",t);
-			fflush(stdout);
-
-
-			for (int i=0; i<N; i++) fprintf(bubbles,"%d ", isBound[i]) ;
-			fprintf(bubbles, "\n");
-			fflush(bubbles);
+			
+			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);fflush(stdout);
 
 			// print energy
 
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
 
-//			for (int i=0; i<N; i++) 
-//				printf("%d ", neigh[i][0]);
-//			printf("\n");
-
-			
-		//	printNeigh();
+				
 			writeVTF(traj);
 		}
 	}
 	
 	printf("\n");
 
+	printf("neighbour list was rebuilt every %d steps\n",NSTEPS/rebuildCount);
+
 	free(seed);
 	fclose(traj);
 	fclose(minim);
 	fclose(energy);
+	fclose(neighCount);
 	fclose(bubbles);
 
 }
