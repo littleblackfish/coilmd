@@ -10,7 +10,7 @@
 #endif
 
 #define N 200
-#define NSTEPS 10000000
+#define NSTEPS 1000000000
 
 #define INTRA_BOND_LENGTH 0.5
 #define INTER_BOND_LENGTH 1.1
@@ -18,7 +18,7 @@
 #define INTER_BOND_CUT 1.2
 #define HARD_CUT 0.4
 
-#define K_BOND 100
+#define K_BOND 200
 #define MASS K_BOND
 
 #define PHI_1 -100
@@ -195,5 +195,3 @@ static float calcTemp () {
 
 	return MASS*kinE/(3*2*N);
 }
-
-
