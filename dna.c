@@ -30,7 +30,7 @@
 #define NEIGH_CUT 1.2
 
 // (NEIGH_CUT/HARD_CUT)^3
-#define MAX_NEIGH 100
+#define MAX_NEIGH 27
 
 #define GAMMA 0.1
 
