@@ -15,8 +15,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define N 100
-#define NSTEPS 100000
+#define N 50
+#define NSTEPS 1000000
+#define WFREQ 100
+#define DT 0.1
 
 #define INTRA_BOND_LENGTH 0.5
 #define INTER_BOND_LENGTH 1.1
@@ -39,7 +41,6 @@
 #define MAX_NEIGH 27
 
 #define GAMMA 0.1
-#define DT 0.1
 
 static void printMat(float [][3]) ;
 static void zero(float [][3]) ;
@@ -83,9 +84,9 @@ static const float hardCutSq = HARD_CUT*HARD_CUT;
 void main(int argc, char ** argv ) {
 
 	#ifdef _OPENMP
-		printf("Compiled with openmp, running %d threads.\n", omp_get_max_threads());
+		printf("Compiled with OpenMP, running %d threads.\n", omp_get_max_threads());
 	#else
-		printf("Compiled without openmp.\n");
+		printf("Compiled without OpenMP.\n");
 	#endif
 	
 	if (argc<2)  {
@@ -145,8 +146,8 @@ void main(int argc, char ** argv ) {
 	//		fflush(neighCount);
 		}
 
-//		if (t%10 ==0) {
-		if (1) {
+		if (t% WFREQ ==0) {
+//		if (1) {
 			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);fflush(stdout);
 
 			for (i=0; i<N; i++) 
