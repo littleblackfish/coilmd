@@ -81,6 +81,12 @@ static const float hardCutSq = HARD_CUT*HARD_CUT;
 #include "langevin.c"
 
 void main(int argc, char ** argv ) {
+
+	#ifdef _OPENMP
+		printf("Compiled with openmp, running %d threads.\n", omp_get_max_threads());
+	#else
+		printf("Compiled without openmp.\n");
+	#endif
 	
 	if (argc<2)  {
 		printf("I cannot run without temperature.\n");
