@@ -1,7 +1,13 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
-#include "omp.h"
+#ifdef _OPENMP
+  #include "omp.h"
+#else 
+   int omp_get_thread_num() {return 0;}
+   int omp_get_num_threads() {return 1;}
+   int omp_get_max_threads() {return 1;}
+#endif
 
 #include "ziggurat_openmp.c"
 
@@ -9,8 +15,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define N 200
-#define NSTEPS 1000000000
+#define N 100
+#define NSTEPS 100000
 
 #define INTRA_BOND_LENGTH 0.5
 #define INTER_BOND_LENGTH 1.1
@@ -33,7 +39,7 @@
 #define MAX_NEIGH 27
 
 #define GAMMA 0.1
-#define DT 0.05
+#define DT 0.1
 
 static void printMat(float [][3]) ;
 static void zero(float [][3]) ;
@@ -133,8 +139,8 @@ void main(int argc, char ** argv ) {
 	//		fflush(neighCount);
 		}
 
-		if (t%1000 ==0) {
-//		if (1) {
+//		if (t%10 ==0) {
+		if (1) {
 			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);fflush(stdout);
 
 			for (i=0; i<N; i++) 
