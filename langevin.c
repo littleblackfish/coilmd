@@ -112,10 +112,12 @@ static void integrateLangevin(float dt, float temperature)
 	// Calculate forces form hard-core repulsion
 	
 	#pragma omp for	reduction(+:hardE)
-	for (i=0; i<2*N; i++) for (k=1; k<neigh[i][0]+1;k++) {
+	for (i=0; i<2*N; i++) {
+		for (k=1; k<neigh[i][0]+1; k++) {
 //		printf("%d ", neigh[i][0]);
 		j=neigh[i][k];
 		hardE += hardcore(i, j, K_BOND, HARD_CUT);
+		}
 	}
 
 /****************** END OF FORCE CALCULATION **************************/

@@ -8,8 +8,6 @@ static int calcNeigh() {
 	float del[3], rsq;
 	int rebuild = 0;
 	
-
-
 	for (i=0; i < 2*N; i++) {
 		del[0] = x[i][0] - xRef[i][0];
 		del[1] = x[i][1] - xRef[i][1];
@@ -45,7 +43,7 @@ static int calcNeigh() {
 				rsq= del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
 
 				if (rsq<neighCutSq) {
-					neigh[i][ ++ neigh[i][0] ]=j;	
+					neigh[i][ ++ neigh[i][0] ] = j;	
 				}
 			}
 		}

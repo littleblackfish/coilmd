@@ -15,10 +15,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define N 50
-#define NSTEPS 1000000
-#define WFREQ 100
-#define DT 0.1
+#define N 100
+#define NSTEPS 100000000
+#define WFREQ 1000
+#define DT 0.01
+#define GAMMA 1
 
 #define INTRA_BOND_LENGTH 0.5
 #define INTER_BOND_LENGTH 1.1
@@ -26,21 +27,20 @@
 #define INTER_BOND_CUT 1.2
 #define HARD_CUT 0.4
 
-#define K_BOND 200
+#define K_BOND 100
 #define MASS K_BOND
 
 #define PHI_1 -100
 #define PHI_2 -95
 
-#define K_DIHEDRAL 10
-#define EPSILON_DIHEDRAL 1
+#define K_DIHEDRAL 1
+#define EPSILON_DIHEDRAL 0.1
 
 #define NEIGH_CUT 1.2
 
 // (NEIGH_CUT/HARD_CUT)^3
-#define MAX_NEIGH 27
+#define MAX_NEIGH 64
 
-#define GAMMA 0.1
 
 static void printMat(float [][3]) ;
 static void zero(float [][3]) ;
@@ -135,6 +135,7 @@ void main(int argc, char ** argv ) {
 	}
 //	printf ("done.\n");fflush(stdout);
 
+	readRestart("restart");
 
 	for (t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
@@ -142,8 +143,8 @@ void main(int argc, char ** argv ) {
 
 		if (calcNeigh()) { 
 			rebuildCount ++;
-	//		printNeighCount(neighCount); 
-	//		fflush(neighCount);
+			printNeighCount(neighCount); 
+			fflush(neighCount);
 		}
 
 		if (t% WFREQ ==0) {
@@ -159,6 +160,7 @@ void main(int argc, char ** argv ) {
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
 			writeVTF(traj);
 		}
+		if (t% 1000000 ==0) writeRestart("restart");
 	}
 	
 	printf("\n");

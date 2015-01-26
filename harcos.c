@@ -14,6 +14,12 @@ static float harcos(int i, int j, float k, float r0,  float rCut) {
 	if (rsq < rCut*rCut) {
 
 		r = sqrt(rsq);
+
+		if (r <= 0.0) {
+			printf("r is 0 for harcos between %d and %d\n",i,j);
+			return 0;
+		}
+
 		dr = r - r0;
 		
 		// epsilon = k * (rCut-r0)^2
