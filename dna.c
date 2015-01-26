@@ -135,7 +135,7 @@ void main(int argc, char ** argv ) {
 	}
 //	printf ("done.\n");fflush(stdout);
 
-	readRestart("restart");
+//	readRestart("restart");
 
 	for (t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
