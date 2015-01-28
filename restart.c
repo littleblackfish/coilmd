@@ -4,9 +4,10 @@ int readRestart(char * filename) {
 	FILE *restart = fopen(filename, "r");
 
 	if (restart) {
+		
+		printf("Restart file found.\n");
+		
 		fscanf(restart,"%d\n", &n);
-		printf("Restart file read for n= %d\n", n);
-	
 		if (n != N) {
 			printf("Restart file is not compatible with current system.\n");
 			exit(1);
@@ -40,7 +41,10 @@ int readRestart(char * filename) {
 		fclose (restart);
 		return 1;
 	}
-	else return 0;
+	else { 
+		printf("Restart file NOT found.\n");
+		return 0;
+	}
 }
 
 static void writeRestart(char * filename) {

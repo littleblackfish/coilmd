@@ -15,8 +15,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define N 100
-#define NSTEPS 1000000
+//#define N 100
+//#define NSTEPS 1000000
 #define WFREQ 1000
 #define DT 0.01
 #define GAMMA 1
@@ -47,6 +47,7 @@ static void printBubble (FILE *) ;
 static void zero(float [][3]) ;
 static float calcTemp();
 static float ziggurat(int num_thread) ;  
+static float maxForce();
 
 // global variables
 
@@ -90,12 +91,17 @@ void main(int argc, char ** argv ) {
 		printf("Compiled without OpenMP.\n");
 	#endif
 	
+	if (argc<3)  {
+		printf("I cannot run without nsteps.\n");
+		exit(1);
+	}
 	if (argc<2)  {
 		printf("I cannot run without temperature.\n");
 		exit(1);
 	}
 
-	float temperature = atof (argv[1]);
+	int nsteps = atoi(argv[1]);
+	float temperature = atof (argv[2]);
 	
 	int t, i, rebuildCount = 0; 
 
@@ -127,27 +133,23 @@ void main(int argc, char ** argv ) {
 		zero(v);
 		zero(xRef);
 
-		printf ("No restart found, minimizing");
+		printf ("Minimizing...");
+		t=0;
 
-
-		for (t=0; t<10000; t++){
-			integrateLangevin(0.001,0);
-			if (t%1000 ==0)
-				printf(".");
-#ifdef FLUSH
-				fflush(stdout);
-#endif
+		do {
+			integrateLangevin(0.01,0);
+			if (t%1000 ==0) {
 				writeVTF(minim);
-		}
+			}
+			t++;
+		} while (maxForce() > 0.1 && t <1000000 );
 
-		printf ("done.\n");
-		
-#ifdef FLUSH
-	       	fflush(stdout);
-#endif
+		printf ("done after %d steps.\n",t);
 	}
 
-	for (t=0; t<NSTEPS; t++){
+	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
+
+	for (t=0; t<nsteps; t++){
 //		printf("Integrating\n");
 		integrateLangevin(DT, temperature);
 
@@ -161,12 +163,12 @@ void main(int argc, char ** argv ) {
 
 		if (t% WFREQ == 0) {
 //		if (1) {
-			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);
+			printf("step %d with %d rebuilds so far.\r",t,rebuildCount);
 
 			printBubble(bubbles);
-#ifdef FLUSH
-			fflush(stdout);
-			fflush(bubbles);
+
+#ifdef FLUSH	
+			fflush(stdout);	fflush(bubbles); 
 #endif
 
 			// print energy
@@ -176,9 +178,7 @@ void main(int argc, char ** argv ) {
 		if (t% 1000000 == 0) writeRestart("restart");
 	}
 	
-	printf("\n");
-
-	printf("neighbour list was rebuilt every %d steps\n",NSTEPS/rebuildCount);
+	printf("Done. Neighbour list was rebuilt about every %d steps.\n",nsteps/rebuildCount);
 
 	free(seed);
 	fclose(traj);
@@ -230,4 +230,15 @@ static float calcTemp () {
 	}
 
 	return MASS*kinE/(3*2*N);
+}
+
+static float maxForce() {
+	int i;
+	float tmp, max = 0;
+
+	for (i=0; i<2*N; i++) {
+		tmp = f[i][0]*f[i][0] + f[i][1]*f[i][1] + f[i][2]*f[i][2];
+		if (tmp>max) max=tmp;
+	}
+	return sqrt(max);
 }
