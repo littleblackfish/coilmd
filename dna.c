@@ -16,7 +16,7 @@
 #endif
 
 #define N 100
-#define NSTEPS 100000000
+#define NSTEPS 1000000
 #define WFREQ 1000
 #define DT 0.01
 #define GAMMA 1
@@ -43,6 +43,7 @@
 
 
 static void printMat(float [][3]) ;
+static void printBubble (FILE *) ;
 static void zero(float [][3]) ;
 static float calcTemp();
 static float ziggurat(int num_thread) ;  
@@ -108,12 +109,6 @@ void main(int argc, char ** argv ) {
 	for (i=0; i < max_threads; i++ ) 
 		seed[i] = shr3_seeded ( &jsr );
 
-//	genVel();
-//	genLadder();
-	genDNA(10.5);
-	zero(f);
-	zero(v);
-	zero(xRef);
 
 	isBound[0]=1;
 	isBound[N-1]=1;
@@ -126,16 +121,31 @@ void main(int argc, char ** argv ) {
 	
 
 	// minimization via Langevin at 0 temperature
-	
-//	printf ("Minimization...");fflush(stdout);
-	for (t=0; t<10000; t++){
-		integrateLangevin(0.001,0);
-		if (t%1000 ==0)
-			writeVTF(minim);
-	}
-//	printf ("done.\n");fflush(stdout);
+	if ( !readRestart("restart") ) {
+		genDNA(10.5);
+		zero(f);
+		zero(v);
+		zero(xRef);
 
-//	readRestart("restart");
+		printf ("No restart found, minimizing");
+
+
+		for (t=0; t<10000; t++){
+			integrateLangevin(0.001,0);
+			if (t%1000 ==0)
+				printf(".");
+#ifdef FLUSH
+				fflush(stdout);
+#endif
+				writeVTF(minim);
+		}
+
+		printf ("done.\n");
+		
+#ifdef FLUSH
+	       	fflush(stdout);
+#endif
+	}
 
 	for (t=0; t<NSTEPS; t++){
 //		printf("Integrating\n");
@@ -143,24 +153,27 @@ void main(int argc, char ** argv ) {
 
 		if (calcNeigh()) { 
 			rebuildCount ++;
-			printNeighCount(neighCount); 
+//			printNeighCount(neighCount); 
+#ifdef FLUSH			
 			fflush(neighCount);
+#endif
 		}
 
-		if (t% WFREQ ==0) {
+		if (t% WFREQ == 0) {
 //		if (1) {
-			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);fflush(stdout);
+			printf("\rstep %d with %d rebuilds so far.",t,rebuildCount);
 
-			for (i=0; i<N; i++) 
-				fprintf(bubbles,"%d ", isBound[i]) ;
-			fprintf(bubbles, "\n");
+			printBubble(bubbles);
+#ifdef FLUSH
+			fflush(stdout);
 			fflush(bubbles);
+#endif
 
 			// print energy
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
 			writeVTF(traj);
 		}
-		if (t% 1000000 ==0) writeRestart("restart");
+		if (t% 1000000 == 0) writeRestart("restart");
 	}
 	
 	printf("\n");
@@ -189,6 +202,13 @@ static void printMat(float matrix[][3]) {
 	for (i=0; i<2*N; i++)
 		printf("%.2f, %.2f, %.2f\n", matrix[i][0], matrix[i][1], matrix[i][2]);
 	printf("\n");
+}
+
+static void printBubble (FILE * bubbleFile) {
+	int i;
+	for (i=0; i<N; i++) 
+		fprintf(bubbleFile, "%d ", isBound[i]) ;
+	fprintf(bubbleFile, "\n");
 }
 
 static void zero(float matrix[][3]) {
