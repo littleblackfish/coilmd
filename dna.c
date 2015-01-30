@@ -150,7 +150,7 @@ void main(int argc, char ** argv ) {
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
 
 	for (t=0; t<nsteps; t++){
-//		printf("Integrating\n");
+		
 		integrateLangevin(DT, temperature);
 
 		if (calcNeigh()) { 
@@ -161,21 +161,19 @@ void main(int argc, char ** argv ) {
 #endif
 		}
 
-		if (t% WFREQ == 0) {
-//		if (1) {
-			printf("step %d with %d rebuilds so far.\r",t,rebuildCount);
-
-			printBubble(bubbles);
-
+		if (t % 1000 == 0)   printBubble(bubbles);
+		if (t% 1000000 == 0) writeRestart("restart");
+		
+		if (t % 100000 == 0) {
+			writeVTF(traj);
 #ifdef FLUSH	
+			printf("step %d with %d rebuilds so far.\r",t,rebuildCount);
 			fflush(stdout);	fflush(bubbles); 
 #endif
-
+			
 			// print energy
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
-			writeVTF(traj);
 		}
-		if (t% 1000000 == 0) writeRestart("restart");
 	}
 	
 	printf("Done. Neighbour list was rebuilt about every %d steps.\n",nsteps/rebuildCount);
