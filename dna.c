@@ -18,7 +18,7 @@
 //#define N 100
 //#define NSTEPS 1000000
 #define WFREQ 1000
-#define DT 0.01
+#define DT 0.1
 #define GAMMA 1
 
 #define INTRA_BOND_LENGTH 0.5
@@ -175,6 +175,8 @@ void main(int argc, char ** argv ) {
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
 		}
 	}
+	writeRestart("restart");
+
 	
 	printf("Done. Neighbour list was rebuilt about every %d steps.\n",nsteps/rebuildCount);
 
