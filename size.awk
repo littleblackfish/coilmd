@@ -28,8 +28,7 @@
 	}; 
 
 END{
-	for (i in sizeCount) {
+	for (i in sizeCount )
 		print i, sizeCount[i]
-	}
 }
 

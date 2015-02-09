@@ -122,7 +122,7 @@ void main(int argc, char ** argv ) {
 	FILE *minim = initVTF("minim.vtf"); 
 	FILE *traj  = initVTF("traj.vtf");
 	FILE *energy  =	fopen("energy.dat", "w"); 
-	FILE *neighCount   = fopen("neigh.dat", "w");
+//	FILE *neighCount   = fopen("neigh.dat", "w");
 	FILE *bubbles =	fopen("bubbles.dat", "w");
 	
 
@@ -157,7 +157,7 @@ void main(int argc, char ** argv ) {
 			rebuildCount ++;
 //			printNeighCount(neighCount); 
 #ifdef FLUSH			
-			fflush(neighCount);
+//			fflush(neighCount);
 #endif
 		}
 
@@ -184,7 +184,7 @@ void main(int argc, char ** argv ) {
 	fclose(traj);
 	fclose(minim);
 	fclose(energy);
-	fclose(neighCount);
+//	fclose(neighCount);
 	fclose(bubbles);
 
 }
