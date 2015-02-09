@@ -49,9 +49,19 @@ static void integrateLangevin(float dt, float temperature)
 		// updating position by a full step
 		// x = x(t+dt)
 		
-		x[i][0]+= v[i][0]*dt ;
-		x[i][1]+= v[i][1]*dt ;
-		x[i][2]+= v[i][2]*dt ;
+		del[0] = v[i][0]*dt;
+		del[1] = v[i][1]*dt;
+		del[2] = v[i][2]*dt;
+
+		x[i][0]+= del[0] ;
+		x[i][1]+= del[1] ;
+		x[i][2]+= del[2] ;
+
+		// updating displacement since last neighbour rebuild
+		
+		xRef[i][0] += del[0] ;
+		xRef[i][1] += del[1] ;
+		xRef[i][2] += del[2] ;
 
 	}
 

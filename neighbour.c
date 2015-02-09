@@ -4,31 +4,34 @@
 
 static int calcNeigh() {
 	
+	int rebuild = 0;
+
+	#pragma omp parallel 
+	{
 	int i,j;
 	float del[3], rsq;
-	int rebuild = 0;
 	
+	#pragma omp for reduction(+:rebuild) schedule(static)	
 	for (i=0; i < 2*N; i++) {
-		del[0] = x[i][0] - xRef[i][0];
-		del[1] = x[i][1] - xRef[i][1];
-		del[2] = x[i][2] - xRef[i][2];
 
-		rsq = del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
-		
-		if (rsq > neighSkinSq) {
-			rebuild=1;
-			break;
+		if (!rebuild) {
+
+			rsq = xRef[i][0]*xRef[i][0] + xRef[i][1]*xRef[i][1] + xRef[i][2]*xRef[i][2];
+			
+			if (rsq > neighSkinSq) {
+				rebuild+=1;
+			}
 		}
 	}
 	
 	if (rebuild) {
-		#pragma omp parallel for private (i,j,del,rsq) 
+		#pragma omp for schedule(dynamic) 
 		for (i=0 ; i < 2*N; i++) {
 			
-			// update reference 
-			xRef[i][0] = x[i][0];
-			xRef[i][1] = x[i][1];
-			xRef[i][2] = x[i][2];
+			// reset reference 
+			xRef[i][0] = 0.0;
+			xRef[i][1] = 0.0;
+			xRef[i][2] = 0.0;
 			
 			//zero neighbour counts
 			neigh[i][0] = 0;
@@ -47,6 +50,7 @@ static int calcNeigh() {
 				}
 			}
 		}
+	}
 	}
 
 	return rebuild;
