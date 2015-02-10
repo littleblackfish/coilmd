@@ -121,10 +121,10 @@ void main(int argc, char ** argv ) {
 
 	FILE *minim = initVTF("minim.vtf"); 
 	FILE *traj  = initVTF("traj.vtf");
-	FILE *energy  =	fopen("energy.dat", "w"); 
-	FILE *bubbles =	fopen("bubbles.dat", "w");
+	FILE *energy  =	fopen("energy.dat", "a"); 
+	FILE *bubbles =	fopen("bubbles.dat", "a");
 #ifdef NDEBUG			
-	FILE *neighCount   = fopen("neigh.dat", "w");
+	FILE *neighCount   = fopen("neigh.dat", "a");
 #endif
 	
 
