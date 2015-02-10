@@ -18,7 +18,7 @@
 //#define N 100
 //#define NSTEPS 1000000
 #define WFREQ 1000
-#define DT 0.01
+#define DT 0.1
 #define GAMMA 1
 
 #define INTRA_BOND_LENGTH 0.5
@@ -103,7 +103,7 @@ void main(int argc, char ** argv ) {
 	int nsteps = atoi(argv[1]);
 	float temperature = atof (argv[2]);
 	
-	int t, i, rebuildCount = 0; 
+	int t, i, rebuildCount = 0, rebuildDelay = 0; 
 
 	// seeding a random stream for each thread
 	r4_nor_setup ( kn, fn, wn );
@@ -122,9 +122,13 @@ void main(int argc, char ** argv ) {
 	FILE *minim = initVTF("minim.vtf"); 
 	FILE *traj  = initVTF("traj.vtf");
 	FILE *energy  =	fopen("energy.dat", "w"); 
-	FILE *neighCount   = fopen("neigh.dat", "w");
 	FILE *bubbles =	fopen("bubbles.dat", "w");
+#ifdef NDEBUG			
+	FILE *neighCount   = fopen("neigh.dat", "w");
+#endif
 	
+
+	zero(xRef);
 
 	// minimization via Langevin at 0 temperature
 	if ( !readRestart("restart") ) {
@@ -150,40 +154,54 @@ void main(int argc, char ** argv ) {
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
 
 	for (t=0; t<nsteps; t++){
-		
-		integrateLangevin(DT, temperature);
 
-		if (calcNeigh()) { 
-			rebuildCount ++;
-//			printNeighCount(neighCount); 
-#ifdef FLUSH			
+		// integration..
+		integrateLangevin(DT, temperature);
+	
+		// neighbour list rebuild with delay
+		if (rebuildDelay++ > 100 && calcNeigh()) { 
+			rebuildCount ++ ;
+			rebuildDelay = 0 ; 
+#ifdef NDEBUG			
+			printNeighCount(neighCount); 
 			fflush(neighCount);
 #endif
 		}
 
+		// print bubble matrix
 		if (t % 1000 == 0)   printBubble(bubbles);
+
+		//write restart file
 		if (t% 1000000 == 0) writeRestart("restart");
 		
+		//write trajectory and energy
 		if (t % 100000 == 0) {
 			writeVTF(traj);
+			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
+
 #ifdef FLUSH	
 			printf("step %d with %d rebuilds so far.\r",t,rebuildCount);
-			fflush(stdout);	fflush(bubbles); 
+			fflush(stdout);	fflush(bubbles); fflush(energy);
 #endif
 			
-			// print energy
-			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
 		}
 	}
+
+	//write final restart
+	writeRestart("restart");
+
 	
 	printf("Done. Neighbour list was rebuilt about every %d steps.\n",nsteps/rebuildCount);
 
+	//close all files
 	free(seed);
 	fclose(traj);
 	fclose(minim);
 	fclose(energy);
-	fclose(neighCount);
 	fclose(bubbles);
+#ifdef NDEBUG			
+	fclose(neighCount);
+#endif
 
 }
 
