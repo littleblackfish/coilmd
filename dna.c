@@ -30,8 +30,6 @@
 #define K_BOND 100
 #define MASS K_BOND
 
-#define PHI_1 -100
-#define PHI_2 -95
 
 #define K_DIHEDRAL 1
 #define EPSILON_DIHEDRAL 0.1
@@ -73,6 +71,14 @@ static const float neighCutSq  = NEIGH_CUT * NEIGH_CUT ;
 static const float neighSkinSq = (NEIGH_CUT-HARD_CUT) * (NEIGH_CUT - HARD_CUT) ;
 static const float hardCutSq = HARD_CUT*HARD_CUT;
 
+#ifdef LADDER
+static const float PHI_1 = 180.0;
+static const float PHI_2 = 180.0;
+#else
+static const float PHI_1 = -100.0;
+static const float PHI_2 = -95.0; 
+#endif
+
 #include "restart.c"
 #include "generators.c"
 #include "neighbour.c"
@@ -103,7 +109,7 @@ void main(int argc, char ** argv ) {
 	int nsteps = atoi(argv[1]);
 	float temperature = atof (argv[2]);
 	
-	int t, i, rebuildCount = 0, rebuildDelay = 0; 
+	int t, i, rebuildCount = 0, rebuildDelay = 101; 
 
 	// seeding a random stream for each thread
 	r4_nor_setup ( kn, fn, wn );
@@ -119,7 +125,6 @@ void main(int argc, char ** argv ) {
 	isBound[0]=1;
 	isBound[N-1]=1;
 
-	FILE *minim = initVTF("minim.vtf"); 
 	FILE *traj  = initVTF("traj.vtf");
 	FILE *energy  =	fopen("energy.dat", "a"); 
 	FILE *bubbles =	fopen("bubbles.dat", "a");
@@ -127,20 +132,25 @@ void main(int argc, char ** argv ) {
 	FILE *neighCount   = fopen("neigh.dat", "a");
 #endif
 	
-
 	zero(xRef);
+	xRef[0][0]=10;
 
 	// minimization via Langevin at 0 temperature
 	if ( !readRestart("restart") ) {
+		FILE *minim = initVTF("minim.vtf"); 
+#ifdef LADDER
+		genLadder();
+#else
 		genDNA(10.5);
+#endif
 		zero(f);
 		zero(v);
-		zero(xRef);
 
 		printf ("Minimizing...");
 		t=0;
 
 		do {
+			calcNeigh();
 			integrateLangevin(0.01,0);
 			if (t%1000 ==0) {
 				writeVTF(minim);
@@ -149,9 +159,13 @@ void main(int argc, char ** argv ) {
 		} while (maxForce() > 0.1 && t <1000000 );
 
 		printf ("done after %d steps.\n",t);
+		fclose(minim);
+		writeRestart("restart");
 	}
+	xRef[0][0]=10;
 
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
+	fflush(stdout);
 
 	for (t=0; t<nsteps; t++){
 
@@ -183,7 +197,6 @@ void main(int argc, char ** argv ) {
 			printf("step %d with %d rebuilds so far.\r",t,rebuildCount);
 			fflush(stdout);	fflush(bubbles); fflush(energy);
 #endif
-			
 		}
 	}
 
@@ -196,7 +209,6 @@ void main(int argc, char ** argv ) {
 	//close all files
 	free(seed);
 	fclose(traj);
-	fclose(minim);
 	fclose(energy);
 	fclose(bubbles);
 #ifdef NDEBUG			

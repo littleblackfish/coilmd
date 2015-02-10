@@ -14,6 +14,8 @@ gcc  -O3 -lm dna.c -o dna100 -DN=100
 for serial version
 
 you can also do -DFLUSH to make the output real time.
+define LADDDER to simulate a ladder instead of a coil.
+define NDEBUG to output neighbour counts.
 
 run as
 
