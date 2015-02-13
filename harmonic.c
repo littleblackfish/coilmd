@@ -17,10 +17,10 @@ static float harmonic(int i, int j, float k, float r0)
 
 	kdr = k*dr;
 	
-	if (r <= 0.0) {
-		printf("r is 0 for harmonic between %d and %d. This is weird. \n",i,j);
-		return kdr*dr;
-	}
+//	if (r <= 0.0) {
+//		printf("r is 0 for harmonic between %d and %d. This is weird. \n",i,j);
+//		return kdr*dr;
+//	}
 
 	fmult = -2.0*kdr/r;
 
@@ -30,18 +30,18 @@ static float harmonic(int i, int j, float k, float r0)
 	
 	//apply forces
 	
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i][0] += del[0];
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i][1] += del[1];
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i][2] += del[2];
 
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[j][0] -= del[0];
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[j][1] -= del[1];
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[j][2] -= del[2];
 
 	//return energy

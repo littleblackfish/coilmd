@@ -141,32 +141,32 @@ static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, 
 	
 	// apply force to each of 4 atoms
 	
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i1][0] += f1[0];
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i1][1] += f1[1];
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i1][2] += f1[2];
 	
-	#pragma omp atomic update     	 
+//	#pragma omp atomic update     	 
 	f[i2][0] += f2[0];
-	#pragma omp atomic update
+//	#pragma omp atomic update
         f[i2][1] += f2[1];
-	#pragma omp atomic update
+//	#pragma omp atomic update
         f[i2][2] += f2[2];
       
-	#pragma omp atomic update
+//	#pragma omp atomic update
       	f[i3][0] += f3[0];
-	#pragma omp atomic update
+//	#pragma omp atomic update
       	f[i3][1] += f3[1];
-	#pragma omp atomic update
+//	#pragma omp atomic update
       	f[i3][2] += f3[2];
       
-	#pragma omp atomic update
+//	#pragma omp atomic update
       	f[i4][0] += f4[0];
-	#pragma omp atomic update
+//	#pragma omp atomic update
       	f[i4][1] += f4[1];
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i4][2] += f4[2];
 	
 	return energy;

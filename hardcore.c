@@ -21,13 +21,13 @@ static float hardcore(int i, int j, float k, float r0 ) {
 		dr = r-r0;
 		kdr= k*dr;
 	
-		if (r <= 0.0) {
+/*		if (r <= 0.0) {
 			printf("r is %f for hardcore between %d and %d\n",r,i,j);
 			printNeigh();
 			exit(1);
 			return kdr*dr;
 		}
-
+*/
 		fmult = -2.0*kdr/r;
 		
 		del[0]*=fmult;

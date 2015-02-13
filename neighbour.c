@@ -11,7 +11,7 @@ static int calcNeigh() {
 	int i,j;
 	float del[3], rsq;
 	
-	#pragma omp for reduction(+:rebuild) schedule(static)	
+	#pragma omp for reduction(||:rebuild) schedule(static)	
 	for (i=0; i < 2*N; i++) {
 
 		if (!rebuild) {
@@ -25,7 +25,7 @@ static int calcNeigh() {
 	}
 	
 	if (rebuild) {
-		#pragma omp for schedule(dynamic) 
+		#pragma omp for schedule(guided,100) 
 		for (i=0 ; i < 2*N; i++) {
 			
 			// reset reference 

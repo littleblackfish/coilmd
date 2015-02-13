@@ -173,7 +173,7 @@ void main(int argc, char ** argv ) {
 		integrateLangevin(DT, temperature);
 	
 		// neighbour list rebuild with delay
-		if (rebuildDelay++ > 100 && calcNeigh()) { 
+		if (rebuildDelay++ > 50 && calcNeigh()) { 
 			rebuildCount ++ ;
 			rebuildDelay = 0 ; 
 #ifdef NDEBUG			
@@ -183,10 +183,15 @@ void main(int argc, char ** argv ) {
 		}
 
 		// print bubble matrix
-		if (t % 1000 == 0)   printBubble(bubbles);
+		if (t % 10000 == 0)   printBubble(bubbles);
 
 		//write restart file
-		if (t% 1000000 == 0) writeRestart("restart");
+		if (t% 1000000 == 0) {
+			writeRestart("restart");
+			fflush(bubbles);
+//			fflush(traj);
+//			fflush(energy);
+		}
 		
 		//write trajectory and energy
 		if (t % 100000 == 0) {

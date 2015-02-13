@@ -15,11 +15,11 @@ static float harcos(int i, int j, float k, float r0,  float rCut) {
 
 		r = sqrt(rsq);
 
-		if (r <= 0.0) {
+/*		if (r <= 0.0) {
 			printf("r is 0 for harcos between %d and %d\n",i,j);
 			return 0;
 		}
-
+*/
 		dr = r - r0;
 		
 		// epsilon = k * (rCut-r0)^2
@@ -59,18 +59,18 @@ static float harcos(int i, int j, float k, float r0,  float rCut) {
 	dely *= fmult;
 	delz *= fmult;
 	
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i][0] += delx;
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i][1] += dely;
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[i][2] += delz;
 	  
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[j][0] -= delx;
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[j][1] -= dely;
-	#pragma omp atomic update
+//	#pragma omp atomic update
 	f[j][2] -= delz;
 	
 	return energy;

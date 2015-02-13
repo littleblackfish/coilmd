@@ -89,7 +89,7 @@ static void integrateLangevin(float dt, float temperature)
 
 	// Calculate forces from inter-strand interaction
 	
-	#pragma omp for reduction(+:interE,dihedralE)
+	#pragma omp for reduction(+:interE,dihedralE) schedule(static)
 	for (i=0; i<N; i++) {
 		j=2*i;
 		k=j+1;
@@ -121,7 +121,7 @@ static void integrateLangevin(float dt, float temperature)
 
 	// Calculate forces form hard-core repulsion
 	
-	#pragma omp for	reduction(+:hardE)
+	#pragma omp for	reduction(+:hardE) schedule(static)
 	for (i=0; i<2*N; i++) {
 		for (k=1; k<neigh[i][0]+1; k++) {
 //		printf("%d ", neigh[i][0]);
