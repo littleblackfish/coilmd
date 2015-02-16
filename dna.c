@@ -141,7 +141,9 @@ void main(int argc, char ** argv ) {
 #ifdef LADDER
 		genLadder();
 #else
-		genDNA(10.5);
+		genCoil(10.5);
+	//	genCircCoil(12);
+		writeVTF(minim);
 #endif
 		zero(f);
 		zero(v);
@@ -162,7 +164,7 @@ void main(int argc, char ** argv ) {
 		fclose(minim);
 		writeRestart("restart");
 	}
-	xRef[0][0]=10;
+	xRef[0][0]=1000;
 
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
 	fflush(stdout);
