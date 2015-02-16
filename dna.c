@@ -138,13 +138,15 @@ void main(int argc, char ** argv ) {
 	// minimization via Langevin at 0 temperature
 	if ( !readRestart("restart") ) {
 		FILE *minim = initVTF("minim.vtf"); 
-#ifdef LADDER
+
+#if defined LADDER
 		genLadder();
+#elif defined CIRCULAR
+		genCircCoil(12);
 #else
-		genCoil(10.5);
-	//	genCircCoil(12);
-		writeVTF(minim);
+		genCoil(12);
 #endif
+		
 		zero(f);
 		zero(v);
 
@@ -152,11 +154,9 @@ void main(int argc, char ** argv ) {
 		t=0;
 
 		do {
+			if (t%1000 ==0) writeVTF(minim);	
 			calcNeigh();
-			integrateLangevin(0.01,0);
-			if (t%1000 ==0) {
-				writeVTF(minim);
-			}
+			integrateLangevin(0.005,0);
 			t++;
 		} while (maxForce() > 0.1 && t <1000000 );
 
@@ -164,15 +164,13 @@ void main(int argc, char ** argv ) {
 		fclose(minim);
 		writeRestart("restart");
 	}
-	xRef[0][0]=1000;
+
+	xRef[0][0]=1000; //force neighbour rebuild at first step
 
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
 	fflush(stdout);
 
 	for (t=0; t<nsteps; t++){
-
-		// integration..
-		integrateLangevin(DT, temperature);
 	
 		// neighbour list rebuild with delay
 		if (rebuildDelay++ > 50 && calcNeigh()) { 
@@ -183,6 +181,9 @@ void main(int argc, char ** argv ) {
 			fflush(neighCount);
 #endif
 		}
+
+		// integration..
+		integrateLangevin(DT, temperature);
 
 		// print bubble matrix
 		if (t % 10000 == 0)   printBubble(bubbles);
@@ -269,11 +270,12 @@ static float calcTemp () {
 
 static float maxForce() {
 	int i;
-	float tmp, max = 0;
+	float tmp, maxf = 0;
 
+	#pragma omp parallel for reduction(max:maxf)
 	for (i=0; i<2*N; i++) {
 		tmp = f[i][0]*f[i][0] + f[i][1]*f[i][1] + f[i][2]*f[i][2];
-		if (tmp>max) max=tmp;
+		if (tmp>maxf) maxf=tmp;
 	}
-	return sqrt(max);
+	return sqrt(maxf);
 }

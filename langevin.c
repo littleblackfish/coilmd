@@ -83,9 +83,15 @@ static void integrateLangevin(float dt, float temperature)
 	// Calculate forces from intra-strand bonds
 	
 	#pragma omp for	schedule(static) reduction(+:intraE)
+#if defined CIRCULAR
+	for (i=0; i<2*N; i++) {
+		intraE += harmonic(i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
+	}
+#else
 	for (i=0; i<2*N-2; i++) {
 		intraE += harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
 	}
+#endif
 
 	// Calculate forces from inter-strand interaction
 	
@@ -94,11 +100,13 @@ static void integrateLangevin(float dt, float temperature)
 		j=2*i;
 		k=j+1;
 		
+
+#ifndef CIRCULAR
 		// the ends are special, they are non breakable and have no dihedrals
-		
-		if (i == 0 || i == N-1) {
-			harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
-		}
+		if (i == 0 || i == N-1)  harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
+#else 
+		if (0) {}
+#endif
 
 		// others have dihedrals if they are not already broken
 
@@ -108,8 +116,8 @@ static void integrateLangevin(float dt, float temperature)
 			if  ( inter != 0 ) { 
 				interE += inter;
 				isBound[i] = 1;
-				dihedralE += dihedral (2*i-2, j, k, 2*i+3, K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedralE += dihedral (2*i+2, j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (2*i-2, j, k, (2*i+3)%(2*N), K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral ((2*i+2)%(2*N)  , j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
 			}
 			else 
 				isBound[i]=0;
