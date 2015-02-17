@@ -80,16 +80,27 @@ static void integrateLangevin(float dt, float temperature)
 		f[i][2]=ziggurat(thread_num)*randFmult;
 	}
 
-	// Calculate forces from intra-strand bonds
+	// private force array
 	
+	float myforce[2*N][3];
+	int myflag[2*N];
+	for (i=0; i<2*N; i++) myflag[i]=0;
+	zero(myforce);
+
+	// Calculate forces from intra-strand bonds
+
 	#pragma omp for	schedule(static) reduction(+:intraE)
 #if defined CIRCULAR
 	for (i=0; i<2*N; i++) {
-		intraE += harmonic(i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(myforce, i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
+		myflag[i]=1;
+		myflag[(i+2)%(2*N)]=1
 	}
 #else
 	for (i=0; i<2*N-2; i++) {
-		intraE += harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(myforce, i, i+2, K_BOND, INTRA_BOND_LENGTH);
+		myflag[i]=1;
+		myflag[i+2]=1;
 	}
 #endif
 
@@ -103,7 +114,11 @@ static void integrateLangevin(float dt, float temperature)
 
 #ifndef CIRCULAR
 		// the ends are special, they are non breakable and have no dihedrals
-		if (i == 0 || i == N-1)  harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
+		if (i == 0 || i == N-1)  {
+			harmonic(myforce,j, k, K_BOND, INTER_BOND_LENGTH);
+			myflag[j]=1;
+			myflag[k]=1;
+		}
 #else 
 		if (0) {}
 #endif
@@ -111,13 +126,19 @@ static void integrateLangevin(float dt, float temperature)
 		// others have dihedrals if they are not already broken
 
 		else {
-			inter = harcos(j,k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			inter = harcos(myforce,j,k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
 
 			if  ( inter != 0 ) { 
 				interE += inter;
 				isBound[i] = 1;
-				dihedralE += dihedral (2*i-2, j, k, (2*i+3)%(2*N), K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedralE += dihedral ((2*i+2)%(2*N)  , j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (myforce, 2*i-2, j, k, (2*i+3)%(2*N), K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (myforce, (2*i+2)%(2*N)  , j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				myflag[ 2*i-2] =1;
+				myflag[  (2*i+3)%(2*N)] =1;
+				myflag[  (2*i+2)%(2*N)  ]=1;
+				myflag[ 2*i-1] =1;
+				myflag[j]=1;
+				myflag[k]=1;
 			}
 			else 
 				isBound[i]=0;
@@ -131,12 +152,28 @@ static void integrateLangevin(float dt, float temperature)
 	
 	#pragma omp for	reduction(+:hardE) schedule(static)
 	for (i=0; i<2*N; i++) {
+		myflag[i]=1;
 		for (k=1; k<neigh[i][0]+1; k++) {
 //		printf("%d ", neigh[i][0]);
 		j=neigh[i][k];
-		hardE += hardcore(i, j, K_BOND, HARD_CUT);
+		hardE += hardcore(myforce,i, j, K_BOND, HARD_CUT);
+		myflag[j]=1;
 		}
 	}
+
+	//reduce forces here 
+	
+	#pragma omp critical 
+	{
+		for (i=0; i<2*N; i++) {
+			if (myflag[i]) {
+			f[i][0]+=myforce[i][0];
+			f[i][1]+=myforce[i][1];
+			f[i][2]+=myforce[i][2];
+			}
+		}
+	}
+	
 
 /****************** END OF FORCE CALCULATION **************************/
 	

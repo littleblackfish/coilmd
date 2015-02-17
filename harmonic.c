@@ -2,7 +2,7 @@
 // V(r) = K*(r-r0)^2
 // F(r) = -dV/dr = -2*K*(r-r0)
 
-static float harmonic(int i, int j, float k, float r0)
+static float harmonic(float f[N][3], int i, int j, float k, float r0)
 {
 	float del[3], r, dr, kdr, fmult;
 	

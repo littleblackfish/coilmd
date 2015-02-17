@@ -258,10 +258,10 @@ static void zero(float matrix[][3]) {
 
 static float calcTemp () {
 	float kinE=0;
-	int i;
 
-	#pragma omp parallel for reduction(+:kinE)
-	for (i=0; i<2*N; i++) {
+	int i;
+	#pragma omp parallel for reduction(+:kinE) private(i)
+	for ( i=0; i<2*N; i++) {
 		kinE += v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
 	}
 
@@ -272,7 +272,7 @@ static float maxForce() {
 	int i;
 	float tmp, maxf = 0;
 
-	#pragma omp parallel for reduction(max:maxf)
+	#pragma omp parallel for reduction(max:maxf) private(tmp)
 	for (i=0; i<2*N; i++) {
 		tmp = f[i][0]*f[i][0] + f[i][1]*f[i][1] + f[i][2]*f[i][2];
 		if (tmp>maxf) maxf=tmp;
