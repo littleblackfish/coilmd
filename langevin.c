@@ -1,3 +1,25 @@
+#include "dihedral.c"
+#include "harmonic.c"
+#include "hardcore.c"
+#include "harcos.c"
+#include "ziggurat_openmp.c"
+
+
+// used for ziggurat
+static float fn[128];
+static uint32_t kn[128];
+static float wn[128];
+// used for SHR3
+static uint32_t *seed;
+
+// normal random number generator using ziggurat method
+static float ziggurat(int thread_num) {  
+	
+	uint32_t  tmp = seed[thread_num];
+      	float random = r4_nor (& tmp , kn, fn, wn );
+	seed[thread_num] = tmp;
+	return random;
+      }
 
 // Velocity Verlet integration with Langevin EoM
 
@@ -81,26 +103,25 @@ static void integrateLangevin(float dt, float temperature)
 	}
 
 	// private force array
-	
-	float myforce[2*N][3];
+/*	
+	float f[2*N][3];
 	int myflag[2*N];
 	for (i=0; i<2*N; i++) myflag[i]=0;
-	zero(myforce);
-
+	zero(f);
+*/
 	// Calculate forces from intra-strand bonds
 
 	#pragma omp for	schedule(static) reduction(+:intraE)
-#if defined CIRCULAR
-	for (i=0; i<2*N; i++) {
-		intraE += harmonic(myforce, i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
-		myflag[i]=1;
-		myflag[(i+2)%(2*N)]=1
+
+#ifdef CIRCULAR
+	for (i=0; i<2*N; i++)	// circular case is periodical
+	{
+		intraE += harmonic(f, i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
 	}
 #else
-	for (i=0; i<2*N-2; i++) {
-		intraE += harmonic(myforce, i, i+2, K_BOND, INTRA_BOND_LENGTH);
-		myflag[i]=1;
-		myflag[i+2]=1;
+	for (i=0; i<2*N-2; i++) // linear case has 2 less bonds
+	{
+		intraE += harmonic(f, i, i+2, K_BOND, INTRA_BOND_LENGTH);
 	}
 #endif
 
@@ -111,38 +132,42 @@ static void integrateLangevin(float dt, float temperature)
 		j=2*i;
 		k=j+1;
 		
+#ifdef CIRCULAR	
+		// circular case is periodical 
+		inter = harcos(f, j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
 
-#ifndef CIRCULAR
+		if  ( inter != 0 ) { 
+			interE += inter;
+			isBound[i] = 1;
+			dihedralE += dihedral (f, j-2, j, k, (k+2)%(2*N), K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			dihedralE += dihedral (f, (j+2)%(2*N), j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			}
+		else 
+			isBound[i]=0;
+
+#else
+		//linear case
 		// the ends are special, they are non breakable and have no dihedrals
-		if (i == 0 || i == N-1)  {
-			harmonic(myforce,j, k, K_BOND, INTER_BOND_LENGTH);
-			myflag[j]=1;
-			myflag[k]=1;
-		}
-#else 
-		if (0) {}
-#endif
+		if (i == 0 || i == N-1)  
+			harmonic(f, j, k, K_BOND, INTER_BOND_LENGTH);
+		
 
 		// others have dihedrals if they are not already broken
 
 		else {
-			inter = harcos(myforce,j,k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			inter = harcos(f, j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
 
 			if  ( inter != 0 ) { 
 				interE += inter;
 				isBound[i] = 1;
-				dihedralE += dihedral (myforce, 2*i-2, j, k, (2*i+3)%(2*N), K_DIHEDRAL, sin1, cos1, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedralE += dihedral (myforce, (2*i+2)%(2*N)  , j, k, 2*i-1, K_DIHEDRAL, sin2, cos2, EPSILON_DIHEDRAL, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				myflag[ 2*i-2] =1;
-				myflag[  (2*i+3)%(2*N)] =1;
-				myflag[  (2*i+2)%(2*N)  ]=1;
-				myflag[ 2*i-1] =1;
-				myflag[j]=1;
-				myflag[k]=1;
+				dihedralE += dihedral (f, j-2, j, k, k+2, K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (f, j+2, j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
 			}
 			else 
 				isBound[i]=0;
 		}
+#endif
+
 	
 		 
 	}
@@ -152,28 +177,12 @@ static void integrateLangevin(float dt, float temperature)
 	
 	#pragma omp for	reduction(+:hardE) schedule(static)
 	for (i=0; i<2*N; i++) {
-		myflag[i]=1;
 		for (k=1; k<neigh[i][0]+1; k++) {
 //		printf("%d ", neigh[i][0]);
 		j=neigh[i][k];
-		hardE += hardcore(myforce,i, j, K_BOND, HARD_CUT);
-		myflag[j]=1;
+		hardE += hardcore(f, i, j, K_BOND, HARD_CUT);
 		}
 	}
-
-	//reduce forces here 
-	
-	#pragma omp critical 
-	{
-		for (i=0; i<2*N; i++) {
-			if (myflag[i]) {
-			f[i][0]+=myforce[i][0];
-			f[i][1]+=myforce[i][1];
-			f[i][2]+=myforce[i][2];
-			}
-		}
-	}
-	
 
 /****************** END OF FORCE CALCULATION **************************/
 	

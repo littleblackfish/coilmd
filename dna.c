@@ -4,20 +4,17 @@
 #ifdef _OPENMP
   #include "omp.h"
 #else 
-   int omp_get_thread_num() {return 0;}
-   int omp_get_num_threads() {return 1;}
-   int omp_get_max_threads() {return 1;}
+   inline int omp_get_thread_num() {return 0;}
+   inline int omp_get_num_threads() {return 1;}
+   inline int omp_get_max_threads() {return 1;}
 #endif
-
-#include "ziggurat_openmp.c"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-//#define N 100
-//#define NSTEPS 1000000
-#define WFREQ 1000
+// some parameters describing the model
+
 #define DT 0.1
 #define GAMMA 1
 
@@ -30,13 +27,10 @@
 #define K_BOND 100
 #define MASS K_BOND
 
-
-#define K_DIHEDRAL 1
-#define EPSILON_DIHEDRAL 0.1
+#define K_DIHED 1
+#define E_DIHED 0.1
 
 #define NEIGH_CUT 1.2
-
-// (NEIGH_CUT/HARD_CUT)^3
 #define MAX_NEIGH 64
 
 
@@ -44,7 +38,6 @@ static void printMat(float [][3]) ;
 static void printBubble (FILE *) ;
 static void zero(float [][3]) ;
 static float calcTemp();
-static float ziggurat(int num_thread) ;  
 static float maxForce();
 
 // global variables
@@ -58,19 +51,6 @@ float f[2*N][3];
 int neigh[2*N][MAX_NEIGH+1];
 int isBound[N];
 
-// used for ziggurat
-static float fn[128];
-static uint32_t kn[128];
-static float wn[128];
-// used for SHR3
-static uint32_t *seed;
-
-// some constants for performance 
-
-static const float neighCutSq  = NEIGH_CUT * NEIGH_CUT ;
-static const float neighSkinSq = (NEIGH_CUT-HARD_CUT) * (NEIGH_CUT - HARD_CUT) ;
-static const float hardCutSq = HARD_CUT*HARD_CUT;
-
 #ifdef LADDER
 static const float PHI_1 = 180.0;
 static const float PHI_2 = 180.0;
@@ -79,14 +59,10 @@ static const float PHI_1 = -100.0;
 static const float PHI_2 = -95.0; 
 #endif
 
-#include "restart.c"
 #include "generators.c"
-#include "neighbour.c"
+#include "restart.c"
 #include "vtf.c"
-#include "dihedral.c"
-#include "harmonic.c"
-#include "hardcore.c"
-#include "harcos.c"
+#include "neighbour.c"
 #include "langevin.c"
 
 void main(int argc, char ** argv ) {
@@ -109,7 +85,7 @@ void main(int argc, char ** argv ) {
 	int nsteps = atoi(argv[1]);
 	float temperature = atof (argv[2]);
 	
-	int t, i, rebuildCount = 0, rebuildDelay = 101; 
+	int i, t=0, rebuildCount = 0, rebuildDelay = 101; 
 
 	// seeding a random stream for each thread
 	r4_nor_setup ( kn, fn, wn );
@@ -132,9 +108,6 @@ void main(int argc, char ** argv ) {
 	FILE *neighCount   = fopen("neigh.dat", "a");
 #endif
 	
-	zero(xRef);
-	xRef[0][0]=10;
-
 	// minimization via Langevin at 0 temperature
 	if ( !readRestart("restart") ) {
 		FILE *minim = initVTF("minim.vtf"); 
@@ -151,7 +124,6 @@ void main(int argc, char ** argv ) {
 		zero(v);
 
 		printf ("Minimizing...");
-		t=0;
 
 		do {
 			if (t%1000 ==0) writeVTF(minim);	
@@ -169,6 +141,8 @@ void main(int argc, char ** argv ) {
 
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
 	fflush(stdout);
+
+	/******* MAIN LOOP BEGINS HERE ********/
 
 	for (t=0; t<nsteps; t++){
 	
@@ -207,6 +181,8 @@ void main(int argc, char ** argv ) {
 #endif
 		}
 	}
+	
+	/******* MAIN LOOP ENDS HERE ******/
 
 	//write final restart
 	writeRestart("restart");
@@ -224,14 +200,6 @@ void main(int argc, char ** argv ) {
 #endif
 
 }
-
-static float ziggurat(int thread_num) {  
-	
-	uint32_t  tmp = seed[thread_num];
-      	float random = r4_nor (& tmp , kn, fn, wn );
-	seed[thread_num] = tmp;
-	return random;
-      }
 
 static void printMat(float matrix[][3]) {
 	int i;

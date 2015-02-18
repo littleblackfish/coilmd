@@ -2,6 +2,11 @@
 // xRef[N][3] is used to keep the positions from last rebuild. 
 // everything closer than NEIGH_CUT are included
 
+// some constants for performance 
+static const float neighCutSq  = NEIGH_CUT * NEIGH_CUT ;
+static const float hardCutSq = HARD_CUT*HARD_CUT;
+static const float neighSkinSq = (NEIGH_CUT-HARD_CUT) * (NEIGH_CUT - HARD_CUT) ;
+
 static int calcNeigh() {
 	
 	int rebuild = 0;

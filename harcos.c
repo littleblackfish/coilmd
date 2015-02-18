@@ -59,18 +59,18 @@ static float harcos(float f[][3], int i, int j, float k, float r0,  float rCut) 
 	dely *= fmult;
 	delz *= fmult;
 	
-//	#pragma omp atomic update
+	#pragma omp atomic update
 	f[i][0] += delx;
-//	#pragma omp atomic update
+	#pragma omp atomic update
 	f[i][1] += dely;
-//	#pragma omp atomic update
+	#pragma omp atomic update
 	f[i][2] += delz;
 	  
-//	#pragma omp atomic update
+	#pragma omp atomic update
 	f[j][0] -= delx;
-//	#pragma omp atomic update
+	#pragma omp atomic update
 	f[j][1] -= dely;
-//	#pragma omp atomic update
+	#pragma omp atomic update
 	f[j][2] -= delz;
 	
 	return energy;
