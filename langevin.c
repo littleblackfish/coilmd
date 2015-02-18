@@ -114,6 +114,7 @@ static void integrateLangevin(float dt, float temperature)
 	#pragma omp for	schedule(static) reduction(+:intraE)
 
 #ifdef CIRCULAR
+	
 	for (i=0; i<2*N; i++)	// circular case is periodical
 	{
 		intraE += harmonic(f, i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
@@ -178,8 +179,7 @@ static void integrateLangevin(float dt, float temperature)
 	#pragma omp for	reduction(+:hardE) schedule(static)
 	for (i=0; i<2*N; i++) {
 		for (k=1; k<neigh[i][0]+1; k++) {
-//		printf("%d ", neigh[i][0]);
-		j=neigh[i][k];
+		j = neigh[i][k];
 		hardE += hardcore(f, i, j, K_BOND, HARD_CUT);
 		}
 	}

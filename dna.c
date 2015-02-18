@@ -163,7 +163,7 @@ void main(int argc, char ** argv ) {
 		if (t % 10000 == 0)   printBubble(bubbles);
 
 		//write restart file
-		if (t% 1000000 == 0) {
+		if (t % 1000000 == 0) {
 			writeRestart("restart");
 			fflush(bubbles);
 //			fflush(traj);
