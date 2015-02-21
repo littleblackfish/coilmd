@@ -39,7 +39,7 @@ The vmd scripts to get this done are work in progress, to be included in the rep
 
 ### energy.dat
 
-This is a file that keeps some energy sums for each timestep for which the coordinates are printed for. The exact order is :
+This is a file that keeps some energy sums for each timestep. Every line contains values for a single snapshot in the following order : 
 
 1. timestep
 2. temperature
@@ -47,6 +47,8 @@ This is a file that keeps some energy sums for each timestep for which the coord
 4. inter-strand bond energy
 5. dihedral energy
 6. hardcore repulsive (non-bonded) energy
+
+A single line is printed for each frame saved in the vtf file, so n'th line in energy.dat corresponds to the n'th frame in the vtf file. 
 
 ### bubbles.dat
 
