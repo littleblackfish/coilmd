@@ -41,12 +41,12 @@ The vmd scripts to get this done are work in progress, to be included in the rep
 
 This is a file that keeps some energy sums for each timestep for which the coordinates are printed for. The exact order is :
 
-* timestep
-* temperature
-* intra-strand bond energy
-* inter-strand bond energy
-* dihedral energy
-* hardcore repulsive (non-bonded) energy
+1. timestep
+2. temperature
+3. intra-strand bond energy
+4. inter-strand bond energy
+5. dihedral energy
+6. hardcore repulsive (non-bonded) energy
 
 ### bubbles.dat
 
