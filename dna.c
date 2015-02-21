@@ -44,12 +44,20 @@ static float maxForce();
 
 float intraE, interE, dihedralE, hardE;
 
-float x[2*N][3];
-float xRef[2*N][3];
-float v[2*N][3];
-float f[2*N][3];
-int neigh[2*N][MAX_NEIGH+1];
-int isBound[N];
+float (*x)[3];
+
+float (*xRef)[3];
+
+float (*v)[3];
+
+float (*f)[3];
+
+int (*neigh)[MAX_NEIGH+1];
+
+int *isBound;
+
+int N;
+int npoints;
 
 #ifdef LADDER
 static const float PHI_1 = 180.0;
@@ -82,8 +90,10 @@ void main(int argc, char ** argv ) {
 		exit(1);
 	}
 
-	int nsteps = atoi(argv[1]);
-	float temperature = atof (argv[2]);
+	N = atoi(argv[1]);
+       	npoints=2*N;	
+	int nsteps = atoi(argv[2]);
+	float temperature = atof (argv[3]);
 	
 	int i, t=0, rebuildCount = 0, rebuildDelay = 101; 
 
@@ -96,6 +106,16 @@ void main(int argc, char ** argv ) {
 	
 	for (i=0; i < max_threads; i++ ) 
 		seed[i] = shr3_seeded ( &jsr );
+
+	x = malloc(sizeof((*x))*2*N);
+	v = malloc(sizeof((*v))*2*N);
+	f = malloc(sizeof((*f))*2*N);
+	
+	xRef = malloc(sizeof((*xRef))*2*N);
+
+	neigh = malloc(sizeof((*neigh))*2*N);
+
+	isBound = malloc(sizeof(int)*N);
 
 
 	isBound[0]=1;

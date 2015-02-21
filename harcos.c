@@ -1,5 +1,5 @@
 
-static float harcos(float f[][3], int i, int j, float k, float r0,  float rCut) {	
+static float harcos(int i, int j, float k, float r0,  float rCut) {	
 	float energy;
   	float delx,dely,delz,fmult;
   	float rsq,r,dr,rk;

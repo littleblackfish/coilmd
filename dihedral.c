@@ -1,4 +1,4 @@
-static float dihedral(float f[][3], int i1, int i2, int i3, int i4, float k, float sin_shift, float cos_shift, float vShift, float rEq, float rCut) {
+static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, float cos_shift, float vShift, float rEq, float rCut) {
 	
 	float vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,vb2xm,vb2ym,vb2zm;
 	float energy,f1[3],f2[3],f3[3],f4[3];

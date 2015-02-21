@@ -5,7 +5,7 @@
 // else
 // 	V = 0 , F = 0
 
-static float hardcore(float f[][3], int i, int j, float k, float r0 ) {
+static float hardcore(int i, int j, float k, float r0 ) {
 
 	float del[3], r, dr, kdr, rsq, fmult;
 	

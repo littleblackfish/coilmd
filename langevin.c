@@ -117,12 +117,12 @@ static void integrateLangevin(float dt, float temperature)
 	
 	for (i=0; i<2*N; i++)	// circular case is periodical
 	{
-		intraE += harmonic(f, i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
 	}
 #else
 	for (i=0; i<2*N-2; i++) // linear case has 2 less bonds
 	{
-		intraE += harmonic(f, i, i+2, K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
 	}
 #endif
 
@@ -135,13 +135,13 @@ static void integrateLangevin(float dt, float temperature)
 		
 #ifdef CIRCULAR	
 		// circular case is periodical 
-		inter = harcos(f, j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+		inter = harcos(j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
 
 		if  ( inter != 0 ) { 
 			interE += inter;
 			isBound[i] = 1;
-			dihedralE += dihedral (f, j-2, j, k, (k+2)%(2*N), K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-			dihedralE += dihedral (f, (j+2)%(2*N), j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			dihedralE += dihedral (j-2, j, k, (k+2)%(2*N), K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			dihedralE += dihedral ((j+2)%(2*N), j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
 			}
 		else 
 			isBound[i]=0;
@@ -150,19 +150,19 @@ static void integrateLangevin(float dt, float temperature)
 		//linear case
 		// the ends are special, they are non breakable and have no dihedrals
 		if (i == 0 || i == N-1)  
-			harmonic(f, j, k, K_BOND, INTER_BOND_LENGTH);
+			harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
 		
 
 		// others have dihedrals if they are not already broken
 
 		else {
-			inter = harcos(f, j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			inter = harcos(j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
 
 			if  ( inter != 0 ) { 
 				interE += inter;
 				isBound[i] = 1;
-				dihedralE += dihedral (f, j-2, j, k, k+2, K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedralE += dihedral (f, j+2, j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (j-2, j, k, k+2, K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (j+2, j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
 			}
 			else 
 				isBound[i]=0;
@@ -180,7 +180,7 @@ static void integrateLangevin(float dt, float temperature)
 	for (i=0; i<2*N; i++) {
 		for (k=1; k<neigh[i][0]+1; k++) {
 		j = neigh[i][k];
-		hardE += hardcore(f, i, j, K_BOND, HARD_CUT);
+		hardE += hardcore(i, j, K_BOND, HARD_CUT);
 		}
 	}
 
