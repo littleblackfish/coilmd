@@ -33,32 +33,26 @@
 #define NEIGH_CUT 1.2
 #define MAX_NEIGH 64
 
-
-static void printMat(float [][3]) ;
-static void printBubble (FILE *) ;
-static void zero(float [][3]) ;
-static float calcTemp();
-static float maxForce();
-
-// global variables
-
+// energy variables
 float intraE, interE, dihedralE, hardE;
 
+// position, velocity, force 
 float (*x)[3];
-
-float (*xRef)[3];
-
 float (*v)[3];
-
 float (*f)[3];
 
+// displacement tracking for neighbour search
+float (*xRef)[3];
+
+// neighbour list
 int (*neigh)[MAX_NEIGH+1];
 
+// association data
 int *isBound;
 
 int N;
-int npoints;
 
+// ladder case does not have any twist
 #ifdef LADDER
 static const float PHI_1 = 180.0;
 static const float PHI_2 = 180.0;
@@ -67,6 +61,7 @@ static const float PHI_1 = -100.0;
 static const float PHI_2 = -95.0; 
 #endif
 
+#include "helper.c"
 #include "generators.c"
 #include "restart.c"
 #include "vtf.c"
@@ -81,17 +76,13 @@ void main(int argc, char ** argv ) {
 		printf("Compiled without OpenMP.\n");
 	#endif
 	
-	if (argc<3)  {
-		printf("I cannot run without nsteps.\n");
-		exit(1);
-	}
-	if (argc<2)  {
-		printf("I cannot run without temperature.\n");
+	if (argc<4)  {
+		printf("Not enough parameters. Cannot run without enough parameters.\n");
 		exit(1);
 	}
 
+	// get the parameters :  N, NSTEPS, TEMPERATURE
 	N = atoi(argv[1]);
-       	npoints=2*N;	
 	int nsteps = atoi(argv[2]);
 	float temperature = atof (argv[3]);
 	
@@ -102,7 +93,7 @@ void main(int argc, char ** argv ) {
 	uint32_t  jsr = 123456;
   	
 	int max_threads = omp_get_max_threads();
-	seed = ( uint32_t * ) malloc ( max_threads * sizeof ( uint32_t ) );
+	seed = malloc ( max_threads * sizeof ( uint32_t ) );
 	
 	for (i=0; i < max_threads; i++ ) 
 		seed[i] = shr3_seeded ( &jsr );
@@ -116,7 +107,6 @@ void main(int argc, char ** argv ) {
 	neigh = malloc(sizeof((*neigh))*2*N);
 
 	isBound = malloc(sizeof(int)*N);
-
 
 	isBound[0]=1;
 	isBound[N-1]=1;
@@ -150,7 +140,7 @@ void main(int argc, char ** argv ) {
 			calcNeigh();
 			integrateLangevin(0.005,0);
 			t++;
-		} while (maxForce() > 0.1 && t <1000000 );
+		} while (maxForce(f) > 0.5 && t < 100000 );
 
 		printf ("done after %d steps.\n",t);
 		fclose(minim);
@@ -176,29 +166,24 @@ void main(int argc, char ** argv ) {
 #endif
 		}
 
-		// integration..
+		// integration
 		integrateLangevin(DT, temperature);
 
 		// print bubble matrix
 		if (t % 10000 == 0)   printBubble(bubbles);
 
-		//write restart file
-		if (t % 1000000 == 0) {
-			writeRestart("restart");
-			fflush(bubbles);
-//			fflush(traj);
-//			fflush(energy);
-		}
 		
 		//write trajectory and energy
 		if (t % 100000 == 0) {
 			writeVTF(traj);
-			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(), intraE, interE, dihedralE, hardE );
-
-#ifdef FLUSH	
-			printf("step %d with %d rebuilds so far.\r",t,rebuildCount);
-			fflush(stdout);	fflush(bubbles); fflush(energy);
-#endif
+			printEnergy(energy, t);
+		}
+		
+		//write restart file and flush buffers
+		if (t % 1000000 == 0) {
+			writeRestart("restart");
+			fflush(bubbles); fflush(traj); fflush(energy);
+			printf("written restart at step %n.\r",t); fflush(stdout);
 		}
 	}
 	
@@ -211,6 +196,12 @@ void main(int argc, char ** argv ) {
 	printf("Done. Neighbour list was rebuilt about every %d steps.\n",nsteps/rebuildCount);
 
 	//close all files
+	free(x);
+	free(v);
+	free(f);
+	free(xRef);
+	free(isBound);
+	free(neigh);
 	free(seed);
 	fclose(traj);
 	fclose(energy);
@@ -219,51 +210,4 @@ void main(int argc, char ** argv ) {
 	fclose(neighCount);
 #endif
 
-}
-
-static void printMat(float matrix[][3]) {
-	int i;
-	for (i=0; i<2*N; i++)
-		printf("%.2f, %.2f, %.2f\n", matrix[i][0], matrix[i][1], matrix[i][2]);
-	printf("\n");
-}
-
-static void printBubble (FILE * bubbleFile) {
-	int i;
-	for (i=0; i<N; i++) 
-		fprintf(bubbleFile, "%d ", isBound[i]) ;
-	fprintf(bubbleFile, "\n");
-}
-
-static void zero(float matrix[][3]) {
-	int i,j; 
-	for (i=0;i<2*N;i++) {
-		matrix[i][0]=0;
-		matrix[i][1]=0;
-		matrix[i][2]=0;
-	}
-}
-
-static float calcTemp () {
-	float kinE=0;
-
-	int i;
-	#pragma omp parallel for reduction(+:kinE) private(i)
-	for ( i=0; i<2*N; i++) {
-		kinE += v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
-	}
-
-	return MASS*kinE/(3*2*N);
-}
-
-static float maxForce() {
-	int i;
-	float tmp, maxf = 0;
-
-	#pragma omp parallel for reduction(max:maxf) private(tmp)
-	for (i=0; i<2*N; i++) {
-		tmp = f[i][0]*f[i][0] + f[i][1]*f[i][1] + f[i][2]*f[i][2];
-		if (tmp>maxf) maxf=tmp;
-	}
-	return sqrt(maxf);
 }
