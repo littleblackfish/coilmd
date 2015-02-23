@@ -183,7 +183,7 @@ void main(int argc, char ** argv ) {
 		if (t % 1000000 == 0) {
 			writeRestart("restart");
 			fflush(bubbles); fflush(traj); fflush(energy);
-			printf("written restart at step %n.\r",t); fflush(stdout);
+			printf("written restart at step %d.\r",t); fflush(stdout);
 		}
 	}
 	
