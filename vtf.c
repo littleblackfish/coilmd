@@ -5,24 +5,35 @@ static FILE * initVTF( char filename[]) {
 	FILE *vtf;
 	int i;
 
-	vtf=fopen(filename, "w");
+	// attempt to read vtf file
+	vtf=fopen(filename, "r");
 
-//	fprintf(vtf,"atom 0:%d radius %f name DNA\n", 2*N-1, HARD_CUT/2);
-
-	//write atoms
-	for (i=0; i<2*N; i++)  
-		fprintf(vtf,"a %d r %f c %d resid %d\n", i, HARD_CUT/2, i%2, i/2);
-	
-	// write bonds
-	for (i = 0 ; i<N; i++){
-		//intra bonds
-		if ( i < N-1) {
-			fprintf(vtf,"bond %d:%d\n", 2*i, 2*i+2);
-			fprintf(vtf,"bond %d:%d\n", 2*i+1, 2*i+3);
-		}
-		//inter bonds
-		fprintf(vtf,"bond %d:%d\n", 2*i,2*i+1);
+	// if file exists, append to it
+	if (vtf) {
+		fclose(vtf);
+		vtf=fopen(filename, "a");
 	}
+	// if the file does not exist, initialize it
+	else { 
+		fclose(vtf);
+		vtf = fopen(filename, "w");
+	
+		//write atoms
+		for (i=0; i<2*N; i++)  
+			fprintf(vtf,"a %d r %f c %d resid %d resname %d\n",HARD_CUT/2, i%2, i/2, i%2);
+		
+		// write bonds
+		for (i = 0 ; i<N; i++){
+			//intra bonds
+			if ( i < N-1) {
+				fprintf(vtf,"bond %d:%d\n", 2*i, 2*i+2);
+				fprintf(vtf,"bond %d:%d\n", 2*i+1, 2*i+3);
+			}
+			//inter bonds
+			fprintf(vtf,"bond %d:%d\n", 2*i,2*i+1);
+		}
+	}
+		
 	return vtf;
 }
 

@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
+#include "signal.h"
 #ifdef _OPENMP
   #include "omp.h"
 #else 
@@ -8,6 +9,7 @@
    inline int omp_get_num_threads() {return 1;}
    inline int omp_get_max_threads() {return 1;}
 #endif
+
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -50,7 +52,8 @@ int (*neigh)[MAX_NEIGH+1];
 // association data
 int *isBound;
 
-int N;
+int N,t,stopRunning=0;
+
 
 // ladder case does not have any twist
 #ifdef LADDER
@@ -68,25 +71,46 @@ static const float PHI_2 = -95.0;
 #include "neighbour.c"
 #include "langevin.c"
 
-void main(int argc, char ** argv ) {
+void graceful_exit(int signo)
+{
+	if (signo == SIGINT) printf("\nReceived SIGINT ");
+	if (signo == SIGUSR1) printf("\nReceived SIGUSR1 ");
+	if (signo == SIGUSR2) printf("\nReceived SIGUSR2 ");
+	 
+	printf ("at timestep %d, will abort after this step.",t);
+	fflush(stdout);
+	stopRunning = 1;
+}
 
-	#ifdef _OPENMP
-		printf("Compiled with OpenMP, running %d threads.\n", omp_get_max_threads());
+void main(int argc, char ** argv ) {
+	signal(SIGINT,  graceful_exit);
+	signal(SIGUSR1, graceful_exit);
+	signal(SIGUSR2, graceful_exit);
+
+	printf("MD simulation of a coarse grained DNA model.\nCompiled in ");
+	#ifdef CIRCULAR 
+	printf("CIRCULAR ");
+	#endif
+	#ifdef LADDER 
+	printf("LADDER ");
 	#else
-		printf("Compiled without OpenMP.\n");
+	printf("COIL ");
+	#endif
+	printf("mode ");
+	#ifdef _OPENMP
+	printf("with OpenMP, running %d threads.\n", omp_get_max_threads());
+	#else
+	printf("without OpenMP.\n");
 	#endif
 	
-	if (argc<4)  {
-		printf("Not enough parameters. Cannot run without enough parameters.\n");
-		exit(1);
-	}
+	if (argc<4)  { printf("I need 3 parameters: N, nsteps, temperature.\n"); exit(1); }
 
 	// get the parameters :  N, NSTEPS, TEMPERATURE
 	N = atoi(argv[1]);
 	int nsteps = atoi(argv[2]);
 	float temperature = atof (argv[3]);
 	
-	int i, t=0, rebuildCount = 0, rebuildDelay = 101; 
+	int i, rebuildCount = 0, rebuildDelay = 101; 
 
 	// seeding a random stream for each thread
 	r4_nor_setup ( kn, fn, wn );
@@ -98,40 +122,45 @@ void main(int argc, char ** argv ) {
 	for (i=0; i < max_threads; i++ ) 
 		seed[i] = shr3_seeded ( &jsr );
 
+
+	//allocate global arrays 
+	
 	x = malloc(sizeof((*x))*2*N);
 	v = malloc(sizeof((*v))*2*N);
 	f = malloc(sizeof((*f))*2*N);
 	
-	xRef = malloc(sizeof((*xRef))*2*N);
+	xRef	= malloc(sizeof((*xRef))*2*N);
+	neigh	= malloc(sizeof((*neigh))*2*N);
+	isBound	= malloc(sizeof(int)*N);
 
-	neigh = malloc(sizeof((*neigh))*2*N);
-
-	isBound = malloc(sizeof(int)*N);
-
+	// force neighbour rebuild at the first step
+	
+	zero(xRef);
+	xRef[0][0]=1000.;
+	
+#ifndef CIRCULAR	
+	// first and last beads are initially (and always) bound 
 	isBound[0]=1;
 	isBound[N-1]=1;
-
-	FILE *traj  = initVTF("traj.vtf");
-	FILE *energy  =	fopen("energy.dat", "a"); 
-	FILE *bubbles =	fopen("bubbles.dat", "a");
-#ifdef NDEBUG			
-	FILE *neighCount   = fopen("neigh.dat", "a");
 #endif
+
 	
-	// minimization via Langevin at 0 temperature
+	// if there is no restart file, 
+	// do minimization via langevin at 0 temperature
 	if ( !readRestart("restart") ) {
 		FILE *minim = initVTF("minim.vtf"); 
 
-#if defined LADDER
+		#if defined LADDER
 		genLadder();
-#elif defined CIRCULAR
+		#elif defined CIRCULAR
 		genCircCoil(12);
-#else
+		#else
 		genCoil(12);
-#endif
+		#endif
 		
 		zero(f);
 		zero(v);
+		t=0;
 
 		printf ("Minimizing...");
 
@@ -144,10 +173,23 @@ void main(int argc, char ** argv ) {
 
 		printf ("done after %d steps.\n",t);
 		fclose(minim);
+		
+		//write minimized config to restart file
 		writeRestart("restart");
+	
 	}
 
-	xRef[0][0]=1000; //force neighbour rebuild at first step
+	// open files in append mode 
+
+	FILE *traj   	= initVTF("traj.vtf");
+	FILE *energy	= fopen("energy.dat", "a"); 
+	FILE *bubbles	= fopen("bubbles.dat", "a");
+	#ifdef NDEBUG			
+	FILE *neighCount= fopen("neigh.dat", "a");
+	#endif
+
+	//force neighbour rebuild at first step
+	xRef[0][0]=1000; 
 
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
 	fflush(stdout);
@@ -157,17 +199,18 @@ void main(int argc, char ** argv ) {
 	for (t=0; t<nsteps; t++){
 	
 		// neighbour list rebuild with delay
-		if (rebuildDelay++ > 50 && calcNeigh()) { 
+		if ( calcNeigh() ) { 
 			rebuildCount ++ ;
-			rebuildDelay = 0 ; 
-#ifdef NDEBUG			
-			printNeighCount(neighCount); 
-			fflush(neighCount);
-#endif
+			#ifdef NDEBUG			
+			printNeighCount(neighCount); fflush(neighCount);
+			#endif
 		}
 
 		// integration
 		integrateLangevin(DT, temperature);
+			
+		// stop running if necessary;
+		if (stopRunning) break;
 
 		// print bubble matrix
 		if (t % 10000 == 0)   printBubble(bubbles);
@@ -183,17 +226,19 @@ void main(int argc, char ** argv ) {
 		if (t % 1000000 == 0) {
 			writeRestart("restart");
 			fflush(bubbles); fflush(traj); fflush(energy);
-			printf("written restart at step %d.\r",t); fflush(stdout);
+			printf("\rWritten restart at step %d.",t); fflush(stdout);
 		}
 	}
 	
 	/******* MAIN LOOP ENDS HERE ******/
 
 	//write final restart
+	printBubble(bubbles);
+	writeVTF(traj);
+	printEnergy(energy, nsteps-1);
 	writeRestart("restart");
-
 	
-	printf("Done. Neighbour list was rebuilt about every %d steps.\n",nsteps/rebuildCount);
+	printf("\nStopped at step %d.\nNeighbour list was rebuilt %d times.\n",t,rebuildCount);
 
 	//close all files
 	free(x);
@@ -206,8 +251,8 @@ void main(int argc, char ** argv ) {
 	fclose(traj);
 	fclose(energy);
 	fclose(bubbles);
-#ifdef NDEBUG			
+	#ifdef NDEBUG			
 	fclose(neighCount);
-#endif
+	#endif
 
 }
