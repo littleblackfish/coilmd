@@ -15,7 +15,6 @@ static FILE * initVTF( char filename[]) {
 	}
 	// if the file does not exist, initialize it
 	else { 
-		fclose(vtf);
 		vtf = fopen(filename, "w");
 	
 		//write atoms
