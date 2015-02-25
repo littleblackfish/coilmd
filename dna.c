@@ -241,16 +241,9 @@ void main(int argc, char ** argv ) {
 	printf("\nStopped at step %d.\nNeighbour list was rebuilt %d times.\n",t,rebuildCount);
 
 	//close all files
-	free(x);
-	free(v);
-	free(f);
-	free(xRef);
-	free(isBound);
-	free(neigh);
-	free(seed);
-	fclose(traj);
-	fclose(energy);
-	fclose(bubbles);
+	free(x); free(v); free(f); free(xRef); 
+	free(isBound); free(neigh); free(seed);
+	fclose(traj); fclose(energy); fclose(bubbles);
 	#ifdef NDEBUG			
 	fclose(neighCount);
 	#endif
