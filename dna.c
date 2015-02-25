@@ -219,7 +219,7 @@ void main(int argc, char ** argv ) {
 		//write trajectory and energy
 		if (t % 100000 == 0) {
 			writeVTF(traj);
-			printEnergy(energy, t);
+			printEnergy(energy);
 		}
 		
 		//write restart file and flush buffers
@@ -235,7 +235,7 @@ void main(int argc, char ** argv ) {
 	//write final restart
 	printBubble(bubbles);
 	writeVTF(traj);
-	printEnergy(energy, nsteps-1);
+	printEnergy(energy);
 	writeRestart("restart");
 	
 	printf("\nStopped at step %d.\nNeighbour list was rebuilt %d times.\n",t,rebuildCount);

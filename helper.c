@@ -48,6 +48,6 @@ static float maxForce(float f[][3]) {
 	return sqrt(maxf);
 }
 
-static void printEnergy (FILE * energy, int t) {
+static void printEnergy (FILE * energy) {
 			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(v), intraE, interE, dihedralE, hardE );
 }
