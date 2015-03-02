@@ -19,7 +19,7 @@ static FILE * initVTF( char filename[]) {
 	
 		//write atoms
 		for (i=0; i<2*N; i++)  
-			fprintf(vtf,"a %d r %f c %d resid %d resname %d\n",HARD_CUT/2, i%2, i/2, i%2);
+			fprintf(vtf,"a %d r %f c %d resid %d resname dna%d\n",i,HARD_CUT/2, i%2, i/2, (i%2)+1);
 		
 		// write bonds
 		for (i = 0 ; i<N; i++){
