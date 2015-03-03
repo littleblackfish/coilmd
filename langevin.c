@@ -45,7 +45,7 @@ static void integrateLangevin(float dt, float temperature)
 	int thread_num = omp_get_thread_num();
 	int num_threads = omp_get_num_threads();
 	int i,j,k;
-	float del[3],norm,rsq;
+	float del[3],norm,rsq,tmp;
 
 	#pragma omp for	schedule(static)
 	for (i=0; i<2*N; i++) {
@@ -110,7 +110,7 @@ static void integrateLangevin(float dt, float temperature)
 	
 	for (i=0; i<2*N; i++)	// circular case is periodical
 	{
-		intraE += harmonic(i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(i, (i+2)%N2, K_BOND, INTRA_BOND_LENGTH);
 	}
 #else
 	for (i=0; i<2*N-2; i++) // linear case has 2 less bonds
@@ -121,17 +121,20 @@ static void integrateLangevin(float dt, float temperature)
 
 	// Calculate forces from inter-strand interaction
 	
-	#pragma omp for reduction(+:interE,dihedralE) schedule(static)
+	#pragma omp for reduction(+:interE) schedule(static)
 	for (i=0; i<N; i++) {
 		j=2*i;
 		k=j+1;
 		
 		#ifdef CIRCULAR	
 		// circular case is periodical 
-		interE = inter(j, k);
+		tmp = inter(j, k);
 
-		if  ( interE != 0 ) isBound[i] = 1;
-		else isBound[i] = 0;
+		if  ( tmp != 0 ) {
+			isBound[i] = 1;
+			interE += tmp;
+		}
+		else 	isBound[i] = 0;
 		
 		#else
 		// linear case has harmonic ends
@@ -140,13 +143,14 @@ static void integrateLangevin(float dt, float temperature)
 		// others have dihedrals if they are not already broken
 
 		else {
-			interE = inter(j, k);
-			if (interE!=0) 	isBound[i] =1;
-			else 		isBound[i] =0;
+			tmp = inter(j, k);
+			if (tmp != 0) 	{
+				isBound[i] =1;
+				interE += tmp;
+			}
+			else	isBound[i] =0;
 		}
 		#endif
-
-		 
 	}
 
 
