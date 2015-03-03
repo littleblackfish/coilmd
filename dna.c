@@ -52,7 +52,7 @@ int (*neigh)[MAX_NEIGH+1];
 // association data
 int *isBound;
 
-int N,t,stopRunning=0;
+int N,N2,t,stopRunning=0;
 
 
 // ladder case does not have any twist
@@ -107,6 +107,7 @@ void main(int argc, char ** argv ) {
 
 	// get the parameters :  N, NSTEPS, TEMPERATURE
 	N = atoi(argv[1]);
+	N2 = 2*N;
 	int nsteps = atoi(argv[2]);
 	float temperature = atof (argv[3]);
 	
@@ -132,6 +133,14 @@ void main(int argc, char ** argv ) {
 	xRef	= malloc(sizeof((*xRef))*2*N);
 	neigh	= malloc(sizeof((*neigh))*2*N);
 	isBound	= malloc(sizeof(int)*N);
+
+	// calculate dihedral shifts
+	
+	sin_shift1 = sin(PHI_1/180.*M_PI);
+	sin_shift2 = sin(PHI_2/180.*M_PI);
+
+	cos_shift1 = sin(PHI_1/180.*M_PI);
+	cos_shift2 = sin(PHI_2/180.*M_PI);
 
 	// force neighbour rebuild at the first step
 	
@@ -238,7 +247,7 @@ void main(int argc, char ** argv ) {
 	printEnergy(energy);
 	writeRestart("restart");
 	
-	printf("\nStopped at step %d.\nNeighbour list was rebuilt %d times.\n",t,rebuildCount);
+	printf("\nStopped at step %d.\nNeighbour list was rebuilt %d times.\n",t,rebuildCount);fflush(stdout);
 
 	//close all files
 	free(x); free(v); free(f); free(xRef); 

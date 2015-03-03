@@ -7,7 +7,7 @@
 
 static float hardcore(int i, int j, float k, float r0 ) {
 
-	float del[3], r, dr, kdr, rsq, fmult;
+	float del[3], rsq;
 	
 	del[0]=x[i][0]-x[j][0];
 	del[1]=x[i][1]-x[j][1];
@@ -15,47 +15,45 @@ static float hardcore(int i, int j, float k, float r0 ) {
 
 	rsq = del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
 
-	if ( rsq<hardCutSq ) {
-
-		r  = sqrt(rsq);
-		dr = r-r0;
-		kdr= k*dr;
+	// terminate early if beyond cutoff
+	if ( rsq > hardCutSq ) return 0.0;
 	
-/*		if (r <= 0.0) {
-			printf("r is %f for hardcore between %d and %d\n",r,i,j);
-			printNeigh();
-			exit(1);
-			return kdr*dr;
-		}
-*/
-		fmult = -2.0*kdr/r;
-		
-		del[0]*=fmult;
-		del[1]*=fmult;
-		del[2]*=fmult;
+	float r, dr, kdr, fmult;
 
-		//apply forces
-		
-		#pragma omp atomic update
-		f[i][0] += del[0];
-		#pragma omp atomic update
-		f[i][1] += del[1];
-		#pragma omp atomic update
-		f[i][2] += del[2];
-		
-		#pragma omp atomic update
-		f[j][0] -= del[0];
-		#pragma omp atomic update
-		f[j][1] -= del[1];
-		#pragma omp atomic update
-		f[j][2] -= del[2];
-
-		//return energy
-
-		return kdr*dr; 
+	r  = sqrt(rsq);
+	dr = r-r0;
+	kdr= k*dr;
+	
+/*	if (r <= 0.0) {
+		printf("r is %f for hardcore between %d and %d\n",r,i,j);
+		printNeigh();
+		exit(1);
+		return kdr*dr;
 	}
+*/
+	fmult = -2.0*kdr/r;
+	
+	del[0]*=fmult;
+	del[1]*=fmult;
+	del[2]*=fmult;
 
-	else 
-		return 0.0;
+	//apply forces
+	
+	#pragma omp atomic update
+	f[i][0] += del[0];
+	#pragma omp atomic update
+	f[i][1] += del[1];
+	#pragma omp atomic update
+	f[i][2] += del[2];
+	
+	#pragma omp atomic update
+	f[j][0] -= del[0];
+	#pragma omp atomic update
+	f[j][1] -= del[1];
+	#pragma omp atomic update
+	f[j][2] -= del[2];
+
+	//return energy
+	return kdr*dr; 
 }
 

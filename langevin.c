@@ -3,6 +3,7 @@
 #include "hardcore.c"
 #include "harcos.c"
 #include "ziggurat_openmp.c"
+#include "inter.c"
 
 
 // used for ziggurat
@@ -31,11 +32,6 @@ static void integrateLangevin(float dt, float temperature)
 	const float halfdtMass = 0.5*dt/MASS;
 	const float randFmult = sqrt(2*temperature*GAMMA*MASS/dt);
 	
-	const float sin1 = sin(PHI_1/180.*M_PI);
-	const float cos1 = cos(PHI_1/180.*M_PI);
-	const float sin2 = sin(PHI_2/180.*M_PI);
-	const float cos2 = cos(PHI_2/180.*M_PI);
-
 	//reset energy
 	
 	intraE=0;
@@ -43,8 +39,6 @@ static void integrateLangevin(float dt, float temperature)
 	hardE=0;
 	dihedralE=0;
 	
-	
-
 	#pragma omp parallel 
 	{
 	
@@ -52,7 +46,6 @@ static void integrateLangevin(float dt, float temperature)
 	int num_threads = omp_get_num_threads();
 	int i,j,k;
 	float del[3],norm,rsq;
-	float inter;
 
 	#pragma omp for	schedule(static)
 	for (i=0; i<2*N; i++) {
@@ -133,43 +126,26 @@ static void integrateLangevin(float dt, float temperature)
 		j=2*i;
 		k=j+1;
 		
-#ifdef CIRCULAR	
+		#ifdef CIRCULAR	
 		// circular case is periodical 
-		inter = harcos(j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+		interE = inter(j, k);
 
-		if  ( inter != 0 ) { 
-			interE += inter;
-			isBound[i] = 1;
-			dihedralE += dihedral (j-2, j, k, (k+2)%(2*N), K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-			dihedralE += dihedral ((j+2)%(2*N), j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-			}
-		else 
-			isBound[i]=0;
-
-#else
-		//linear case
-		// the ends are special, they are non breakable and have no dihedrals
-		if (i == 0 || i == N-1)  
-			harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
+		if  ( interE != 0 ) isBound[i] = 1;
+		else isBound[i] = 0;
 		
-
+		#else
+		// linear case has harmonic ends
+		if (i == 0 || i == N-1)  harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
+		
 		// others have dihedrals if they are not already broken
 
 		else {
-			inter = harcos(j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
-
-			if  ( inter != 0 ) { 
-				interE += inter;
-				isBound[i] = 1;
-				dihedralE += dihedral (j-2, j, k, k+2, K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedralE += dihedral (j+2, j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-			}
-			else 
-				isBound[i]=0;
+			interE = inter(j, k);
+			if (interE!=0) 	isBound[i] =1;
+			else 		isBound[i] =0;
 		}
-#endif
+		#endif
 
-	
 		 
 	}
 
