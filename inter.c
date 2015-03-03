@@ -8,7 +8,6 @@
 // this monolithic version does away with most of those. 
 
 #define E_BOND 1
-#define K_BOND 100
 #define BOND_CUT 1.2
 #define r0 1.1
 #define rCut BOND_CUT

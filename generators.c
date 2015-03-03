@@ -76,8 +76,6 @@ static void genCoil (float pitch) {
 
 static void genCircCoil(float pitch) {
 
-
-
 	float phi = 2*M_PI/N;
 	float r   = 0.5*N*(INTRA_BOND_LENGTH-0.1)/M_PI;
 
@@ -111,8 +109,8 @@ static void genCircCoil(float pitch) {
 		tangent[1] = -sin(i*phi);
 
 		// rotate aroung the tangent 
-		rotate(x[2*i], tangent, theta);
-		rotate(x[2*i+1], tangent, theta);
+		rotate(x[2*i], tangent, -theta);
+		rotate(x[2*i+1], tangent, -theta);
 	}
 
 	// displace all pairs to a circular path
