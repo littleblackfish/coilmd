@@ -113,18 +113,13 @@ static void integrateLangevin(float dt, float temperature)
 
 	#pragma omp for	schedule(static) reduction(+:intraE)
 
-#ifdef CIRCULAR
-	
+	#ifdef CIRCULAR
 	for (i=0; i<2*N; i++)	// circular case is periodical
-	{
 		intraE += harmonic(i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
-	}
-#else
+	#else
 	for (i=0; i<2*N-2; i++) // linear case has 2 less bonds
-	{
 		intraE += harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
-	}
-#endif
+	#endif
 
 	// Calculate forces from inter-strand interaction
 	
@@ -140,8 +135,8 @@ static void integrateLangevin(float dt, float temperature)
 		if  ( inter != 0 ) { 
 			interE += inter;
 			isBound[i] = 1;
-			dihedralE += dihedral (j-2, j, k, (k+2)%(2*N), K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-			dihedralE += dihedral ((j+2)%(2*N), j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			dihedralE += dihedral ((j+N2-2)%N2, j, k, (k+2)%N2, K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			dihedralE += dihedral ((j+2)%N2, j, k, (k+N2-2)%N2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
 			}
 		else 
 			isBound[i]=0;

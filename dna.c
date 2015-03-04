@@ -52,7 +52,7 @@ int (*neigh)[MAX_NEIGH+1];
 // association data
 int *isBound;
 
-int N,t,stopRunning=0;
+int N,N2,t,stopRunning=0;
 
 
 // ladder case does not have any twist
@@ -107,6 +107,8 @@ void main(int argc, char ** argv ) {
 
 	// get the parameters :  N, NSTEPS, TEMPERATURE
 	N = atoi(argv[1]);
+	N2 = 2*N;
+
 	int nsteps = atoi(argv[2]);
 	float temperature = atof (argv[3]);
 	
