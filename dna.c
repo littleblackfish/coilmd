@@ -31,7 +31,7 @@
 #define K_DIHED 1
 #define E_DIHED 0.1
 
-#define CUT_NEIGH 1.5
+#define CUT_NEIGH 1.0
 #define MAX_NEIGH 64
 
 // energy variables
