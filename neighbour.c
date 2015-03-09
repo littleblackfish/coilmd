@@ -1,11 +1,11 @@
 // Neighbour list builder
 // xRef[N][3] is used to keep the positions from last rebuild. 
-// everything closer than NEIGH_CUT are included
+// everything closer than CUT_NEIGH are included
 
 // some constants for performance 
-static const float neighCutSq  = NEIGH_CUT * NEIGH_CUT ;
-static const float hardCutSq = HARD_CUT*HARD_CUT;
-static const float neighSkinSq = (NEIGH_CUT-HARD_CUT) * (NEIGH_CUT - HARD_CUT) ;
+
+static const float neighCutSq  = CUT_NEIGH * CUT_NEIGH ;
+static const float neighSkinSq = 0.25* (CUT_NEIGH-R_INTRA) * (CUT_NEIGH-R_INTRA) ;
 
 static int calcNeigh() {
 	
@@ -18,21 +18,15 @@ static int calcNeigh() {
 	
 	#pragma omp for reduction(||:rebuild) schedule(static)	
 	for (i=0; i < 2*N; i++) {
-
 		if (!rebuild) {
-
 			rsq = xRef[i][0]*xRef[i][0] + xRef[i][1]*xRef[i][1] + xRef[i][2]*xRef[i][2];
-			
-			if (rsq > neighSkinSq) {
-				rebuild+=1;
-			}
+			if (rsq > neighSkinSq) 	rebuild+=1;
 		}
 	}
 	
 	if (rebuild) {
 		#pragma omp for schedule(guided,100) 
 		for (i=0 ; i < 2*N; i++) {
-			
 			// reset reference 
 			xRef[i][0] = 0.0;
 			xRef[i][1] = 0.0;
@@ -42,7 +36,14 @@ static int calcNeigh() {
 			neigh[i][0] = 0;
 
 			//calculate new neighbors
-			for (j=i+1; j < 2*N; j++) {
+			for (j=i+1; j < N2; j++) {
+
+				// exculde next in chain
+				#ifdef CIRCULAR
+				if (i == 0 && j == N2-2) continue;
+				if (i == 1 && j == N2-1) continue;
+				#endif
+				if (j == i+2) continue;
 
 				del[0]=x[i][0]-x[j][0];
 				del[1]=x[i][1]-x[j][1];

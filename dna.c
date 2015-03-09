@@ -20,11 +20,10 @@
 #define DT 0.1
 #define GAMMA 1
 
-#define INTRA_BOND_LENGTH 0.5
-#define INTER_BOND_LENGTH 1.1
+#define R_INTRA 0.5
+#define R_INTER 1.1
 
-#define INTER_BOND_CUT 1.2
-#define HARD_CUT 0.4
+#define CUT_INTER 1.2
 
 #define K_BOND 100
 #define MASS K_BOND
@@ -32,7 +31,7 @@
 #define K_DIHED 1
 #define E_DIHED 0.1
 
-#define NEIGH_CUT 1.2
+#define CUT_NEIGH 1.5
 #define MAX_NEIGH 64
 
 // energy variables

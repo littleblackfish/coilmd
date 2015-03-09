@@ -55,8 +55,8 @@ static void integrateLangevin(float dt, float temperature)
 	float inter;
 
 	#pragma omp for	schedule(static)
-	for (i=0; i<2*N; i++) {
-
+	for (i=0; i<2*N; i++) 
+	{
 		// updating velocity by half a step
 		// v = v(t+0.5dt)
 		
@@ -115,10 +115,10 @@ static void integrateLangevin(float dt, float temperature)
 
 	#ifdef CIRCULAR
 	for (i=0; i<2*N; i++)	// circular case is periodical
-		intraE += harmonic(i, (i+2)%(2*N), K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(i, (i+2)%(2*N), K_BOND, R_INTRA);
 	#else
 	for (i=0; i<2*N-2; i++) // linear case has 2 less bonds
-		intraE += harmonic(i, i+2, K_BOND, INTRA_BOND_LENGTH);
+		intraE += harmonic(i, i+2, K_BOND, R_INTRA);
 	#endif
 
 	// Calculate forces from inter-strand interaction
@@ -128,54 +128,52 @@ static void integrateLangevin(float dt, float temperature)
 		j=2*i;
 		k=j+1;
 		
-#ifdef CIRCULAR	
+	#ifdef CIRCULAR	
 		// circular case is periodical 
-		inter = harcos(j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+		inter = harcos(j, k, K_BOND, R_INTER, CUT_INTER);
 
 		if  ( inter != 0 ) { 
 			interE += inter;
 			isBound[i] = 1;
-			dihedralE += dihedral ((j+N2-2)%N2, j, k, (k+2)%N2, K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-			dihedralE += dihedral ((j+2)%N2, j, k, (k+N2-2)%N2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			dihedralE += dihedral ((j+N2-2)%N2, j, k, (k+2)%N2, K_DIHED, sin1, cos1, E_DIHED, R_INTER, CUT_INTER);
+			dihedralE += dihedral ((j+2)%N2, j, k, (k+N2-2)%N2, K_DIHED, sin2, cos2, E_DIHED, R_INTER, CUT_INTER);
 			}
 		else 
 			isBound[i]=0;
 
-#else
+	#else
 		//linear case
 		// the ends are special, they are non breakable and have no dihedrals
 		if (i == 0 || i == N-1)  
-			harmonic(j, k, K_BOND, INTER_BOND_LENGTH);
+			harmonic(j, k, K_BOND, R_INTER);
 		
 
 		// others have dihedrals if they are not already broken
 
 		else {
-			inter = harcos(j, k, K_BOND, INTER_BOND_LENGTH, INTER_BOND_CUT);
+			inter = harcos(j, k, K_BOND, R_INTER, CUT_INTER);
 
 			if  ( inter != 0 ) { 
 				interE += inter;
 				isBound[i] = 1;
-				dihedralE += dihedral (j-2, j, k, k+2, K_DIHED, sin1, cos1, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
-				dihedralE += dihedral (j+2, j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, INTER_BOND_LENGTH, INTER_BOND_CUT);
+				dihedralE += dihedral (j-2, j, k, k+2, K_DIHED, sin1, cos1, E_DIHED, R_INTER, CUT_INTER);
+				dihedralE += dihedral (j+2, j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, R_INTER, CUT_INTER);
 			}
 			else 
 				isBound[i]=0;
 		}
-#endif
-
+	#endif
 	
-		 
 	}
-
 
 	// Calculate forces form hard-core repulsion
 	
 	#pragma omp for	reduction(+:hardE) schedule(static)
-	for (i=0; i<2*N; i++) {
+	for (i=0; i<2*N; i++) 
+	{
 		for (k=1; k<neigh[i][0]+1; k++) {
 		j = neigh[i][k];
-		hardE += hardcore(i, j, K_BOND, HARD_CUT);
+		hardE += hardcore(i, j, K_BOND, R_INTRA);
 		}
 	}
 
