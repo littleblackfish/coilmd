@@ -137,7 +137,7 @@ void main(int argc, char ** argv ) {
 	// force neighbour rebuild at the first step
 	
 	zero(xRef);
-	xRef[0][0]=1000.;
+	xRef[0][0] = CUT_NEIGH;
 	
 #ifndef CIRCULAR	
 	// first and last beads are initially (and always) bound 
@@ -154,9 +154,9 @@ void main(int argc, char ** argv ) {
 		#if defined LADDER
 		genLadder();
 		#elif defined CIRCULAR
-		genCircCoil(12);
+		genCircCoil(12.3);
 		#else
-		genCoil(12);
+		genCoil(12.3);
 		#endif
 		
 		zero(f);
@@ -190,7 +190,7 @@ void main(int argc, char ** argv ) {
 	#endif
 
 	//force neighbour rebuild at first step
-	xRef[0][0]=1000; 
+	xRef[0][0] = CUT_NEIGH;
 
 	printf("N=%d, T=%.3f, beginning run for %d steps..\n", N, temperature, nsteps);
 	fflush(stdout);
