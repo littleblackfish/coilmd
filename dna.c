@@ -17,8 +17,8 @@
 
 // some parameters describing the model
 
-#define DT 0.1
-#define GAMMA 0.5
+#define DT 0.025
+#define GAMMA 1
 
 #define R_INTRA 0.5
 #define R_INTER 1.1
@@ -31,7 +31,7 @@
 #define K_DIHED 1
 #define E_DIHED 0.1
    
-#define K_HARDCORE 1.0
+#define K_HARDCORE 10.0
 #define CUT_NEIGH 1.0
 #define MAX_NEIGH 64
 
