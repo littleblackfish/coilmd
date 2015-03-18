@@ -18,7 +18,7 @@
 // some parameters describing the model
 
 #define DT 0.1
-#define GAMMA 1
+#define GAMMA 0.5
 
 #define R_INTRA 0.5
 #define R_INTER 1.1
@@ -30,7 +30,8 @@
 
 #define K_DIHED 1
 #define E_DIHED 0.1
-
+   
+#define K_HARDCORE 1.0
 #define CUT_NEIGH 1.0
 #define MAX_NEIGH 64
 
@@ -123,6 +124,12 @@ void main(int argc, char ** argv ) {
 	for (i=0; i < max_threads; i++ ) 
 		seed[i] = shr3_seeded ( &jsr );
 
+
+	// the order of hardcore repulsion and associated sigma
+	float n=12,m=6;
+	float sigma = R_INTRA * pow((m/n), (1.0/(n-m)));
+	printf ("sigma is %f\n", sigma);
+	sigma6= pow(sigma, 6);
 
 	//allocate global arrays 
 	
