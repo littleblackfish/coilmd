@@ -1,4 +1,4 @@
-static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, float cos_shift, float vShift, float rEq, float rCut) {
+static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos_shift ) {
 	
 	float vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,vb2xm,vb2ym,vb2zm;
 	float energy,f1[3],f2[3],f3[3],f4[3];
@@ -30,9 +30,9 @@ static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, 
 	dkMult = 0;
 	
 	//scale the coefficient if bond is further than equilibrium distance
-	if (rg > rEq && rg < rCut) {
-	    	rasq = M_PI / (rCut-rEq); 	//scaling coefficient (use rasq temporarily for efficiency)
-	    	rbsq = rg - rEq; 		//rdistance from r0   (use rbsq temporarily for efficiency)
+	if (rg >  R_INTER  && rg <  CUT_INTER ) {
+	    	rasq = M_PI / ( CUT_INTER - R_INTER ); 	//scaling coefficient (use rasq temporarily for efficiency)
+	    	rbsq = rg -  R_INTER ; 		//rdistance from r0   (use rbsq temporarily for efficiency)
 	      	kMult  = 0.5 * ( 1 + cos(rbsq*rasq)) ;
 	    	dkMult = -0.5*rasq * sin(rbsq*rasq)  ;
 	    	//printf("Scaled dihedral due to bond btw %d and %d with r=%g, kScaled=%g\n" ,i2, i3, rMid,kScaled);
@@ -40,7 +40,7 @@ static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, 
 	}
 	
 	  //skip this dihedral if bond is broken
-	else if (rg >= rCut )  {
+	else if (rg >=  CUT_INTER  )  {
 	      //printf("Broken bond btw %d and %d with r=  %g\n" ,i2, i3, rg);
 	      //printf("Broken bond with r=%.2f\n" , rg);
 	      	printf ("Why are you calculating broken dihedrals, dummy?\n");
@@ -89,12 +89,12 @@ static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, 
 	
 	// V(phi) = f(rMid) * p(phi)
 	// f(r)   = kMult (piecewise)
-	// p(phi) = k * [ 1 - cos (phi - shift) ] - vShift 
+	// p(phi) = k * [ 1 - cos (phi - shift) ] - E_DIHED 
 	
 	p = 1 - c*cos_shift - s*sin_shift;
 	df1 =   s*cos_shift - c*sin_shift;
 	
-	p = k*p - vShift;
+	p = K_DIHED * p - E_DIHED;
 	
 	energy = kMult * p;
 	
@@ -117,7 +117,7 @@ static float dihedral(int i1, int i2, int i3, int i4, float k, float sin_shift, 
 	dthy = gbb*by;
 	dthz = gbb*bz;
 	
-	df = -kMult * k * df1;
+	df = -kMult * K_DIHED * df1;
 	
 	sx2 = df*dtgx;
 	sy2 = df*dtgy;

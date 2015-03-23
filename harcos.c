@@ -1,57 +1,39 @@
+// harmonic cosine potential to represent breakable inter-strand bonds
+// harmonic until r0        		v = k (r-r0)^2 - E_INTER
+// scaled cosine btw r0 and rCut	v = 
+// 0 after rCut				v = 0
 
-static float harcos(int i, int j, float k, float r0,  float rCut) {	
-	float energy;
-  	float delx,dely,delz,fmult;
-  	float rsq,r,dr,rk;
-  	float mult;
+static float harcos(int i, int j ) {	
+  	float delx,dely,delz,rsq;
 
 	delx = x[i][0] - x[j][0];
 	dely = x[i][1] - x[j][1];
 	delz = x[i][2] - x[j][2];
 	
 	rsq = delx*delx + dely*dely + delz*delz;
-	
-	if (rsq < rCut*rCut) {
 
-		r = sqrt(rsq);
+	//terminate early if beyond cutoff
+	
+	if (rsq >= CUT_INTER*CUT_INTER ) return 0.0;
+  	
+	float fmult,energy,r,dr,rk;
+	
 
-/*		if (r <= 0.0) {
-			printf("r is 0 for harcos between %d and %d\n",i,j);
-			return 0;
-		}
-*/
-		dr = r - r0;
-		
-		// epsilon = k * (rCut-r0)^2
-		
-		const float epsilon = k*0.01;
-
+	r = sqrt(rsq);
+	dr = r - R_INTER;
 	
-		if (r<r0) {  		//this is the harmonic part
-			rk = k * dr;
-	
-			fmult = -2.0*rk/r;
-	
-			energy = rk*dr - epsilon;
-		}
-	
-		else if (r<rCut) { 	//this is the cosine part
-	
-			rk = M_PI / (rCut-r0);
-	    
-			energy = epsilon * 0.5 * ( 1 - cos(dr*rk)) - epsilon;
-	
-			fmult =  -epsilon * 0.5 * rk * sin(dr*rk)/r;
-	
-		}
+	// this is the harmonic part
+	if ( r < R_INTER) {  				
+		rk = K_INTER * dr;
+		fmult = -2.0*rk/r;
+		energy = rk*dr - E_INTER;
 	}
-	
-	else     {
-//		printf("The interstrand bond %d is broken\n", i/2);
-		return 0.0 ;
+	// this is the cosine part
+	else { 		
+		rk = M_PI / (CUT_INTER - R_INTER);
+		energy = E_INTER * 0.5 * ( 1 - cos(dr*rk)) - E_INTER;
+		fmult = -E_INTER * 0.5 * rk * sin(dr*rk)/r;
 	}
-	
-	//printf(" %f %f %f\n",delx*fmult, dely*fmult, delz*fmult );
 	
 	// apply forces
 	 	

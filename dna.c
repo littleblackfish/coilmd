@@ -15,30 +15,35 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// some parameters describing the model
+// integrator parameters
 
-#define DT 0.025
+#define DT 0.05
 #define GAMMA 1
+#define MASS 400
 
+// intra strand parameters
 #define R_INTRA 0.5
-#define R_INTER 1.1
+#define K_INTRA 400
 
+// inter-strand parameters
+#define R_INTER 1.1
+#define K_INTER 100
+#define E_INTER 1.0
 #define CUT_INTER 1.2
 
-#define K_BOND 100
-#define MASS K_BOND
-
-#define K_DIHED 1
+// dihedral parameters
+#define K_DIHED 1.0
 #define E_DIHED 0.1
    
-#define K_HARDCORE 10.0
+// non-bonded parameters
+#define K_HARDCORE 1.0
 #define CUT_NEIGH 1.0
 #define MAX_NEIGH 64
 
-// energy variables
+// global energy variables
 float intraE, interE, dihedralE, hardE;
 
-// position, velocity, force 
+// position, velocity, force
 float (*x)[3];
 float (*v)[3];
 float (*f)[3];
@@ -63,6 +68,8 @@ static const float PHI_2 = 180.0;
 static const float PHI_1 = -100.0;
 static const float PHI_2 = -95.0; 
 #endif
+
+static float sin1,cos1,sin2,cos2;
 
 #include "helper.c"
 #include "generators.c"
@@ -130,6 +137,12 @@ void main(int argc, char ** argv ) {
 	float sigma = R_INTRA * pow((m/n), (1.0/(n-m)));
 	printf ("sigma is %f\n", sigma);
 	sigma6= pow(sigma, 6);
+
+	// calculate sin and cos shifts for dihedrals once 
+	sin1 = sin(PHI_1/180.*M_PI);
+	cos1 = cos(PHI_1/180.*M_PI);
+	sin2 = sin(PHI_2/180.*M_PI);
+	cos2 = cos(PHI_2/180.*M_PI);
 
 	//allocate global arrays 
 	

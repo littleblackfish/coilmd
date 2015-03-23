@@ -31,19 +31,12 @@ static void integrateLangevin(float dt, float temperature)
 	const float halfdtMass = 0.5*dt/MASS;
 	const float randFmult = sqrt(2*temperature*GAMMA*MASS/dt);
 	
-	const float sin1 = sin(PHI_1/180.*M_PI);
-	const float cos1 = cos(PHI_1/180.*M_PI);
-	const float sin2 = sin(PHI_2/180.*M_PI);
-	const float cos2 = cos(PHI_2/180.*M_PI);
-
-	//reset energy
+	// reset energy
 	
 	intraE=0;
 	interE=0;
 	hardE=0;
 	dihedralE=0;
-	
-	
 
 	#pragma omp parallel 
 	{
@@ -115,10 +108,10 @@ static void integrateLangevin(float dt, float temperature)
 
 	#ifdef CIRCULAR
 	for (i=0; i<2*N; i++)	// circular case is periodical
-		intraE += harmonic(i, (i+2)%(2*N), K_BOND, R_INTRA);
+		intraE += harmonic(i, (i+2)%(2*N), K_INTRA, R_INTRA);
 	#else
 	for (i=0; i<2*N-2; i++) // linear case has 2 less bonds
-		intraE += harmonic(i, i+2, K_BOND, R_INTRA);
+		intraE += harmonic(i, i+2, K_INTRA, R_INTRA);
 	#endif
 
 	// Calculate forces from inter-strand interaction
@@ -130,13 +123,13 @@ static void integrateLangevin(float dt, float temperature)
 		
 	#ifdef CIRCULAR	
 		// circular case is periodical 
-		inter = harcos(j, k, K_BOND, R_INTER, CUT_INTER);
+		inter = harcos(j, k);
 
 		if  ( inter != 0 ) { 
 			interE += inter;
 			isBound[i] = 1;
-			dihedralE += dihedral ((j+N2-2)%N2, j, k, (k+2)%N2, K_DIHED, sin1, cos1, E_DIHED, R_INTER, CUT_INTER);
-			dihedralE += dihedral ((j+2)%N2, j, k, (k+N2-2)%N2, K_DIHED, sin2, cos2, E_DIHED, R_INTER, CUT_INTER);
+			dihedralE += dihedral ((j+N2-2)%N2, j, k, (k+2)%N2, sin1, cos1);
+			dihedralE += dihedral ((j+2)%N2, j, k, (k+N2-2)%N2, sin2, cos2);
 			}
 		else 
 			isBound[i]=0;
@@ -145,19 +138,19 @@ static void integrateLangevin(float dt, float temperature)
 		//linear case
 		// the ends are special, they are non breakable and have no dihedrals
 		if (i == 0 || i == N-1)  
-			harmonic(j, k, K_BOND, R_INTER);
+			harmonic(j, k, K_INTER, R_INTER);
 		
 
 		// others have dihedrals if they are not already broken
 
 		else {
-			inter = harcos(j, k, K_BOND, R_INTER, CUT_INTER);
+			inter = harcos(j, k);
 
 			if  ( inter != 0 ) { 
 				interE += inter;
 				isBound[i] = 1;
-				dihedralE += dihedral (j-2, j, k, k+2, K_DIHED, sin1, cos1, E_DIHED, R_INTER, CUT_INTER);
-				dihedralE += dihedral (j+2, j, k, k-2, K_DIHED, sin2, cos2, E_DIHED, R_INTER, CUT_INTER);
+				dihedralE += dihedral (j-2, j, k, k+2, sin1, cos1);
+				dihedralE += dihedral (j+2, j, k, k-2, sin2, cos2);
 			}
 			else 
 				isBound[i]=0;
@@ -173,7 +166,7 @@ static void integrateLangevin(float dt, float temperature)
 	{
 		for (k=1; k<neigh[i][0]+1; k++) {
 		j = neigh[i][k];
-		hardE += hardcore(i, j, K_HARDCORE);
+		hardE += hardcore(i, j);
 		}
 	}
 

@@ -4,7 +4,7 @@ static const float hardCutSq = R_INTRA*R_INTRA;
 
 static float sigma6;
 
-static float hardcore(int i, int j, float k) {
+static float hardcore(int i, int j) {
 
 	float del[3], rsq;
 	
@@ -24,7 +24,7 @@ static float hardcore(int i, int j, float k) {
 	r6inv  = r2inv*r2inv*r2inv;
 	
 	fmult  = r6inv * sigma6 * 24 * (2*sigma6*r6inv - 1) ;
-	fmult *= k*r2inv;
+	fmult *= K_HARDCORE * r2inv;
 
 	del[0]*=fmult;
 	del[1]*=fmult;
@@ -48,10 +48,8 @@ static float hardcore(int i, int j, float k) {
 
 	// return energy
 
-	return 4*k*sigma6*r6inv*(sigma6*r6inv-1 ); 
+	return 4 * K_HARDCORE *sigma6*r6inv*(sigma6*r6inv-1 ); 
 }
-
-
 
 
 
