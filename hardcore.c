@@ -75,7 +75,7 @@ static float softcore(int i, int j) {
 	r = del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
 
 	// terminate early if beyond cutoff
-	if ( r > CUT_INTRA * CUT_INTRA ) return 0;
+	if ( r > R_INTRA * R_INTRA ) return 0;
 
 	float dr,kdr,fmult;
 

@@ -36,7 +36,7 @@
 #define E_DIHED 0.1
    
 // non-bonded parameters
-#define K_HARDCORE 1.0
+#define K_HARDCORE 400.0
 #define CUT_NEIGH 1.0
 #define MAX_NEIGH 64
 
