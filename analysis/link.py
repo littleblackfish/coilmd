@@ -95,8 +95,8 @@ if __name__ == '__main__':
     	r1 = P1.coordinates()
         r2 = P2.coordinates()
 
-        r1=resample(r1,500)
-        r2=resample(r2,500)
+#        r1=resample(r1,2000)
+#        r2=resample(r2,2000)
 
         lnlist[t] = link(r1,r2)
     

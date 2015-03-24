@@ -18,7 +18,7 @@
 // integrator parameters
 
 #define DT 0.05
-#define GAMMA 1
+#define GAMMA 1.0
 #define MASS 400
 
 // intra strand parameters
@@ -133,10 +133,12 @@ void main(int argc, char ** argv ) {
 
 
 	// the order of hardcore repulsion and associated sigma
-	float n=12,m=6;
+	float n=4,m=2;
 	float sigma = R_INTRA * pow((m/n), (1.0/(n-m)));
 	printf ("sigma is %f\n", sigma);
-	sigma6= pow(sigma, 6);
+	sigma2 = pow(sigma, 2);
+	sigma4 = pow(sigma, 4);
+	sigma6 = pow(sigma, 6);
 
 	// calculate sin and cos shifts for dihedrals once 
 	sin1 = sin(PHI_1/180.*M_PI);
