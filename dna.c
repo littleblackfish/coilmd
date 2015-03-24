@@ -17,13 +17,13 @@
 
 // integrator parameters
 
-#define DT 0.05
+#define DT 0.1
 #define GAMMA 1.0
-#define MASS 400
+#define MASS 200
 
 // intra strand parameters
 #define R_INTRA 0.5
-#define K_INTRA 400
+#define K_INTRA 200
 
 // inter-strand parameters
 #define R_INTER 1.1
