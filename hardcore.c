@@ -115,6 +115,57 @@ static float hardcore_6_2(int i, int j) {
 	return 2.598 * K_INTRA * 0.03 * r2inv * sigma2 * (sigma4*r4inv - 1 ); 
 }
 
+// hardcore repulsive potential based on 8-4 mie potential
+// c = 4.0
+// sigma(0.5) = 0.42044820762685725
+// k = 0.001 * K_INTRA
+
+static float hardcore_8_4(int i, int j) {
+
+	float del[3], rsq;
+	
+	del[0]=x[i][0]-x[j][0];
+	del[1]=x[i][1]-x[j][1];
+	del[2]=x[i][2]-x[j][2];
+
+	// this is squared distance
+	rsq = del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
+
+	// terminate early if beyond cutoff
+	if ( rsq > hardCutSq ) return 0;
+
+	float r2inv, r6inv, fmult;
+
+	r2inv  = 1/rsq;
+	r4inv  = r2inv*r2inv;
+	
+	fmult  = r4inv * sigma4 * 16 * (2*sigma4*r4inv - 1) ;
+	fmult *=  0.001 * K_INTRA * r2inv;
+
+	del[0]*=fmult;
+	del[1]*=fmult;
+	del[2]*=fmult;
+
+	// apply forces
+	
+	#pragma omp atomic update
+	f[i][0] += del[0];
+	#pragma omp atomic update
+	f[i][1] += del[1];
+	#pragma omp atomic update
+	f[i][2] += del[2];
+	
+	#pragma omp atomic update
+	f[j][0] -= del[0];
+	#pragma omp atomic update
+	f[j][1] -= del[1];
+	#pragma omp atomic update
+	f[j][2] -= del[2];
+
+	// return energy
+
+	return 4 * 0.001 * K_INTRA * sigma4*r4inv*(sigma4*r4inv-1 ); 
+}
 // hardcore repulsive potential based on 12-6 mie potential
 // c = 4.0
 // sigma(0.5) = 0.44544935907016964
