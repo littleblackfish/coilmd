@@ -36,9 +36,12 @@
 #define E_DIHED 0.1
    
 // non-bonded parameters
-#define K_HARDCORE 400.0
+#define N_HC 12
+#define M_HC 6
 #define CUT_NEIGH 1.0
 #define MAX_NEIGH 64
+// only for softcore
+#define K_HARDCORE 1.0
 
 // global energy variables
 float intraE, interE, dihedralE, hardE;
@@ -133,9 +136,9 @@ void main(int argc, char ** argv ) {
 
 
 	// the order of hardcore repulsion and associated sigma
-	float n=4,m=2;
+	float n=N_HC,m=M_HC;
 	float sigma = R_INTRA * pow((m/n), (1.0/(n-m)));
-	printf ("sigma is %f\n", sigma);
+	printf ("Hardcore based on mie %d-%d, sigma is %f\n",N_HC,M_HC, sigma);
 	sigma2 = pow(sigma, 2);
 	sigma4 = pow(sigma, 4);
 	sigma6 = pow(sigma, 6);

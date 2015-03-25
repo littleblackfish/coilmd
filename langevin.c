@@ -166,7 +166,7 @@ static void integrateLangevin(float dt, float temperature)
 	{
 		for (k=1; k<neigh[i][0]+1; k++) {
 		j = neigh[i][k];
-		hardE += hardcore_4_2(i, j);
+		hardE += hardcore_12_6 (i, j);
 //		hardE += softcore(i, j);
 		}
 	}
