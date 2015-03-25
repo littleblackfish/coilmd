@@ -134,7 +134,7 @@ static float hardcore_8_4(int i, int j) {
 	// terminate early if beyond cutoff
 	if ( rsq > hardCutSq ) return 0;
 
-	float r2inv, r6inv, fmult;
+	float r2inv, r4inv, fmult;
 
 	r2inv  = 1/rsq;
 	r4inv  = r2inv*r2inv;
