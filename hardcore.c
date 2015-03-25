@@ -116,6 +116,9 @@ static float hardcore_6_2(int i, int j) {
 }
 
 // hardcore repulsive potential based on 12-6 mie potential
+// c = 4.0
+// sigma(0.5) = 0.44544935907016964
+// k = 0.0036 * K_INTRA
 
 static float hardcore_12_6(int i, int j) {
 
@@ -137,7 +140,7 @@ static float hardcore_12_6(int i, int j) {
 	r6inv  = r2inv*r2inv*r2inv;
 	
 	fmult  = r6inv * sigma6 * 24 * (2*sigma6*r6inv - 1) ;
-	fmult *= K_HARDCORE * r2inv;
+	fmult *=  0.0036 * K_INTRA * r2inv;
 
 	del[0]*=fmult;
 	del[1]*=fmult;
@@ -161,7 +164,7 @@ static float hardcore_12_6(int i, int j) {
 
 	// return energy
 
-	return 4 * K_HARDCORE *sigma6*r6inv*(sigma6*r6inv-1 ); 
+	return 4 * 0.0036 * K_INTRA * sigma6*r6inv*(sigma6*r6inv-1 ); 
 }
 
 
