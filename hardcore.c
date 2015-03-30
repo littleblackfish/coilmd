@@ -10,14 +10,13 @@
 // else 	: hardcore_n_m(r) = 0 
 
 static const float hardCutSq = R_INTRA*R_INTRA;
-static float sigma2,sigma4,sigma6;
-
+static float sigma2_intra, sigma2_inter;
 // hardcore repulsive potential based on mie 4-2 
 // c = 4
 // sigma(0.5) = 0.3535533905932738
 // k = 0.05 * K_INTRA for best compatibility
 
-static float hardcore_4_2(int i, int j) {
+static float hardcore_4_2(int i, int j, float sigma2) {
 
 	float del[3], rsq;
 	
@@ -68,7 +67,7 @@ static float hardcore_4_2(int i, int j) {
 // sigma(0.5) = 0.37991784282579627
 // k = 0.03 * K_INTRA for best compatibility
 
-static float hardcore_6_2(int i, int j) {
+static float hardcore_6_2(int i, int j, float sigma2) {
 
 	float del[3], rsq;
 	
@@ -83,6 +82,7 @@ static float hardcore_6_2(int i, int j) {
 	if ( rsq > hardCutSq ) return 0;
 
 	float r2inv, r4inv, fmult;
+	float sigma4 = sigma2*sigma2;
 
 	r2inv = 1/rsq;
 	r4inv = r2inv*r2inv;
@@ -120,7 +120,7 @@ static float hardcore_6_2(int i, int j) {
 // sigma(0.5) = 0.42044820762685725
 // k = 0.001 * K_INTRA
 
-static float hardcore_8_4(int i, int j) {
+static float hardcore_8_4(int i, int j, float sigma2) {
 
 	float del[3], rsq;
 	
@@ -135,6 +135,7 @@ static float hardcore_8_4(int i, int j) {
 	if ( rsq > hardCutSq ) return 0;
 
 	float r2inv, r4inv, fmult;
+	float sigma4 = sigma2*sigma2;
 
 	r2inv  = 1/rsq;
 	r4inv  = r2inv*r2inv;
@@ -171,7 +172,7 @@ static float hardcore_8_4(int i, int j) {
 // sigma(0.5) = 0.44544935907016964
 // k = 0.0036 * K_INTRA
 
-static float hardcore_12_6(int i, int j) {
+static float hardcore_12_6(int i, int j, float sigma2) {
 
 	float del[3], rsq;
 	
@@ -186,6 +187,7 @@ static float hardcore_12_6(int i, int j) {
 	if ( rsq > hardCutSq ) return 0;
 
 	float r2inv, r6inv, fmult;
+	float sigma6 = sigma2*sigma2*sigma2;
 
 	r2inv  = 1/rsq;
 	r6inv  = r2inv*r2inv*r2inv;

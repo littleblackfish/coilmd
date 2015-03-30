@@ -17,7 +17,7 @@
 
 // integrator parameters
 
-#define DT 0.1
+#define DT 0.05
 #define GAMMA 1.0
 #define MASS 200
 
@@ -36,9 +36,11 @@
 #define E_DIHED 0.1
    
 // non-bonded parameters
-#define N_HC 12
-#define M_HC 6
-#define CUT_NEIGH 1.0
+#define N_HC 4
+#define M_HC 2
+#define R_HC_INTRA 0.5
+#define R_HC_INTER 1.0
+#define CUT_NEIGH 1.5
 #define MAX_NEIGH 64
 // only for softcore
 #define K_HARDCORE 1.0
@@ -137,11 +139,10 @@ void main(int argc, char ** argv ) {
 
 	// the order of hardcore repulsion and associated sigma
 	float n=N_HC,m=M_HC;
-	float sigma = R_INTRA * pow((m/n), (1.0/(n-m)));
+	float sigma = pow((m/n), (1.0/(n-m)));
 	printf ("Hardcore based on mie %d-%d, sigma is %f\n",N_HC,M_HC, sigma);
-	sigma2 = pow(sigma, 2);
-	sigma4 = pow(sigma, 4);
-	sigma6 = pow(sigma, 6);
+	sigma2_intra = R_HC_INTRA * R_HC_INTRA * sigma*sigma;
+	sigma2_inter = R_HC_INTER * R_HC_INTER * sigma*sigma;
 
 	// calculate sin and cos shifts for dihedrals once 
 	sin1 = sin(PHI_1/180.*M_PI);
@@ -243,7 +244,7 @@ void main(int argc, char ** argv ) {
 
 		
 		//write trajectory and energy
-		if (t % 100000 == 0) {
+		if (t % 1000 == 0) {
 			writeVTF(traj);
 			printEnergy(energy);
 		}

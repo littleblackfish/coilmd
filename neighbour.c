@@ -5,7 +5,7 @@
 // some constants for performance 
 
 static const float neighCutSq  = CUT_NEIGH * CUT_NEIGH ;
-static const float neighSkinSq = 0.25* (CUT_NEIGH-R_INTRA) * (CUT_NEIGH-R_INTRA) ;
+static const float neighSkinSq = 0.25* (CUT_NEIGH-R_HC_INTER) * (CUT_NEIGH-R_HC_INTER) ;
 
 static int calcNeigh() {
 	
