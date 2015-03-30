@@ -244,7 +244,7 @@ void main(int argc, char ** argv ) {
 
 		
 		//write trajectory and energy
-		if (t % 1000 == 0) {
+		if (t % 100000 == 0) {
 			writeVTF(traj);
 			printEnergy(energy);
 		}
