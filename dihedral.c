@@ -1,4 +1,4 @@
-static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos_shift ) {
+static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos_shift, float kMult, float dkMult ) {
 	
 	float vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,vb2xm,vb2ym,vb2zm;
 	float energy,f1[3],f2[3],f3[3],f4[3];
@@ -6,7 +6,7 @@ static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos
 	float df,df1,fg,hg,fga,hgb,gaa,gbb;
 	float dtfx,dtfy,dtfz,dtgx,dtgy,dtgz,dthx,dthy,dthz;
 	float c,s,p,sx2,sy2,sz2;
-	float kMult, dkMult;
+//	float kMult, dkMult;
 	
 	// 1st bond
 	
@@ -26,15 +26,16 @@ static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos
 	
 	//calculate length of middle bond (vb2)     
 	rg = sqrt(vb2x*vb2x + vb2y*vb2y + vb2z*vb2z) ;
-	kMult = 1;
+/*	kMult = 1;
 	dkMult = 0;
 	
+	float dr,rk;
 	//scale the coefficient if bond is further than equilibrium distance
 	if (rg >  R_INTER  && rg <  CUT_INTER ) {
-	    	rasq = M_PI / ( CUT_INTER - R_INTER ); 	//scaling coefficient (use rasq temporarily for efficiency)
-	    	rbsq = rg -  R_INTER ; 		//rdistance from r0   (use rbsq temporarily for efficiency)
-	      	kMult  = 0.5 * ( 1 + cos(rbsq*rasq)) ;
-	    	dkMult = -0.5*rasq * sin(rbsq*rasq)  ;
+	    	rk = M_PI / ( CUT_INTER - R_INTER ); 	//scaling coefficient (use rasq temporarily for efficiency)
+	    	dr = rg -  R_INTER ; 		//rdistance from r0   (use rbsq temporarily for efficiency)
+	      	kMult  = 0.5 * ( 1 + cos(dr*rk)) ;
+	    	dkMult = -0.5 * rk * sin(dr*rk)  ;
 	    	//printf("Scaled dihedral due to bond btw %d and %d with r=%g, kScaled=%g\n" ,i2, i3, rMid,kScaled);
 	      	//printf("Scaled dihedral r=%.2f, kMult=%.2f, dkMult=%.2f\n" ,rg,kMult,dkMult);
 	}
@@ -46,7 +47,7 @@ static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos
 	      	printf ("Why are you calculating broken dihedrals, dummy?\n");
 	      	return 0;   
 	}
-	
+*/	
 	// 3rd bond
 	
 	vb3x = x[i4][0] - x[i3][0];
@@ -58,6 +59,7 @@ static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos
 	ax = vb1y*vb2zm - vb1z*vb2ym;
 	ay = vb1z*vb2xm - vb1x*vb2zm;
 	az = vb1x*vb2ym - vb1y*vb2xm;
+
 	bx = vb3y*vb2zm - vb3z*vb2ym;
 	by = vb3z*vb2xm - vb3x*vb2zm;
 	bz = vb3x*vb2ym - vb3y*vb2xm;
@@ -66,9 +68,9 @@ static float dihedral(int i1, int i2, int i3, int i4, float sin_shift, float cos
 	rbsq = bx*bx + by*by + bz*bz;
 	
 	rginv = ra2inv = rb2inv = 0.0;
-	if (rg > 0) rginv = 1.0/rg;
-	if (rasq > 0) ra2inv = 1.0/rasq;
-	if (rbsq > 0) rb2inv = 1.0/rbsq;
+	if (rg   > 1e-8) rginv = 1.0/rg;
+	if (rasq > 1e-8) ra2inv = 1.0/rasq;
+	if (rbsq > 1e-8) rb2inv = 1.0/rbsq;
 	rabinv = sqrt(ra2inv*rb2inv);
 	
 	

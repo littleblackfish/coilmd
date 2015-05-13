@@ -18,7 +18,7 @@
 // integrator parameters
 
 #define DT 0.05
-#define GAMMA 1.0
+#define GAMMA 0.5
 #define MASS 200
 
 // intra strand parameters
@@ -28,13 +28,18 @@
 // inter-strand parameters
 #define R_INTER 1.1
 #define K_INTER 100
-#define E_INTER 1.0
+#define E_INTER 1
 #define CUT_INTER 1.2
+
+// angle parameters
+#define K_ANGLE 5.0
+#define E_ANGLE 0.1
+#define THETA0 1.4 //radians is 80.2 degrees
 
 // dihedral parameters
 #define K_DIHED 1.0
 #define E_DIHED 0.1
-   
+
 // non-bonded parameters
 #define N_HC 4
 #define M_HC 2
@@ -42,11 +47,9 @@
 #define R_HC_INTER 1.0
 #define CUT_NEIGH 1.5
 #define MAX_NEIGH 64
-// only for softcore
-#define K_HARDCORE 1.0
 
 // global energy variables
-float intraE, interE, dihedralE, hardE;
+float intraE, interE, angleE, dihedralE, intraHardE, interHardE;
 
 // position, velocity, force
 float (*x)[3];
@@ -78,10 +81,10 @@ static float sin1,cos1,sin2,cos2;
 
 #include "helper.c"
 #include "generators.c"
-#include "restart.c"
 #include "vtf.c"
 #include "neighbour.c"
 #include "langevin.c"
+#include "restart.c"
 
 void graceful_exit(int signo)
 {
@@ -130,11 +133,16 @@ void main(int argc, char ** argv ) {
 	r4_nor_setup ( kn, fn, wn );
 	uint32_t  jsr = 123456;
   	
+#ifdef _OPENMP
+	// allocate seed array 
 	int max_threads = omp_get_max_threads();
 	seed = malloc ( max_threads * sizeof ( uint32_t ) );
-	
+	// generate seeds for each thread
 	for (i=0; i < max_threads; i++ ) 
 		seed[i] = shr3_seeded ( &jsr );
+#else
+	seed = jsr;
+#endif
 
 
 	// the order of hardcore repulsion and associated sigma
@@ -143,6 +151,7 @@ void main(int argc, char ** argv ) {
 	printf ("Hardcore based on mie %d-%d, sigma is %f\n",N_HC,M_HC, sigma);
 	sigma2_intra = R_HC_INTRA * R_HC_INTRA * sigma*sigma;
 	sigma2_inter = R_HC_INTER * R_HC_INTER * sigma*sigma;
+	printf ("intra sigma is %.3f and inter sigma is %.3f.\n",sqrt(sigma2_intra), sqrt(sigma2_inter));
 
 	// calculate sin and cos shifts for dihedrals once 
 	sin1 = sin(PHI_1/180.*M_PI);
@@ -180,7 +189,7 @@ void main(int argc, char ** argv ) {
 		#if defined LADDER
 		genLadder();
 		#elif defined CIRCULAR
-		genCircCoil(12.3);
+		genCircCoil(12);
 		#else
 		genCoil(12.3);
 		#endif
@@ -203,7 +212,6 @@ void main(int argc, char ** argv ) {
 		
 		//write minimized config to restart file
 		writeRestart("restart");
-	
 	}
 
 	// open files in append mode 
@@ -236,15 +244,13 @@ void main(int argc, char ** argv ) {
 		// integration
 		integrateLangevin(DT, temperature);
 			
-		// stop running if necessary;
-		if (stopRunning) break;
 
 		// print bubble matrix
 		if (t % 10000 == 0)   printBubble(bubbles);
 
 		
 		//write trajectory and energy
-		if (t % 100000 == 0) {
+		if (t % 10000 == 0) {
 			writeVTF(traj);
 			printEnergy(energy);
 		}
@@ -255,6 +261,9 @@ void main(int argc, char ** argv ) {
 			fflush(bubbles); fflush(traj); fflush(energy);
 			printf("\rWritten restart at step %d.",t); fflush(stdout);
 		}
+
+		// stop running if necessary;
+		if (stopRunning) break;
 	}
 	
 	/******* MAIN LOOP ENDS HERE ******/
@@ -269,7 +278,10 @@ void main(int argc, char ** argv ) {
 
 	//close all files
 	free(x); free(v); free(f); free(xRef); 
-	free(isBound); free(neigh); free(seed);
+	free(isBound); free(neigh);
+	#ifdef _OPENMP
+	free(seed);
+	#endif
 	fclose(traj); fclose(energy); fclose(bubbles);
 	#ifdef NDEBUG			
 	fclose(neighCount);

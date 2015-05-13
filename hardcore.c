@@ -230,7 +230,7 @@ static float hardcore_12_6(int i, int j, float sigma2) {
 
 // squared cutoff used for performance
 
-static float softcore(int i, int j) {
+static float softcore(int i, int j, float r0) {
 
 	float del[3], r;
 	
@@ -242,13 +242,13 @@ static float softcore(int i, int j) {
 	r = del[0]*del[0]+del[1]*del[1]+del[2]*del[2];
 
 	// terminate early if beyond cutoff
-	if ( r > R_INTRA * R_INTRA ) return 0;
+	if ( r > r0 * r0 ) return 0;
 
 	float dr,kdr,fmult;
 
 	r  = sqrt(r);
-	dr = r - R_INTRA;
-	kdr= K_HARDCORE * dr;
+	dr = r - r0;
+	kdr= K_INTRA * dr;
 	fmult = -2.0*kdr/r;
 	
 	del[0]*=fmult;

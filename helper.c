@@ -1,10 +1,16 @@
-
 static void printMat(float matrix[][3]) {
 	int i;
 	for (i=0; i<2*N; i++)
 		printf("%.2f, %.2f, %.2f\n", matrix[i][0], matrix[i][1], matrix[i][2]);
 	printf("\n");
 }
+
+static void getMagnitude(float f[][3], float mag[]) {
+	int i;
+	for (i=0; i<2*N; i++)
+		mag[i] = sqrt(f[i][0]*f[i][0]+f[i][1]*f[i][1]+f[i][2]*f[i][2]);
+}
+
 
 static void printBubble (FILE * bubbleFile) {
 	int i;
@@ -49,5 +55,5 @@ static float maxForce(float f[][3]) {
 }
 
 static void printEnergy (FILE * energy) {
-			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(v), intraE, interE, dihedralE, hardE );
+			fprintf(energy, "%d\t%f\t%f\t%f\t%f\t%f\t%f\n",t, calcTemp(v), intraE, interE, angleE, dihedralE, intraHardE, interHardE );
 }

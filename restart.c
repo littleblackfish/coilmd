@@ -7,7 +7,12 @@ int readRestart(char * filename) {
 		
 		printf("Restart file found.\n");
 		
-		fscanf(restart,"%d\n", &n);
+#ifdef _OPENMP
+		fscanf(restart,"%d\t%u\n", &n, &seed[0]);
+#else
+		fscanf(restart,"%d\t%u\n", &n, &seed);
+#endif
+
 		if (n != N) {
 			printf("Restart file is not compatible with current system.\n");
 			exit(1);
@@ -52,7 +57,11 @@ static void writeRestart(char * filename) {
 
 	FILE *restart = fopen(filename, "w");
 
-	fprintf (restart, "%d\n", N);
+#ifdef _OPENMP
+	fprintf (restart, "%d\t%u\n", N, seed[0]);
+#else
+	fprintf (restart, "%d\t%u\n", N, seed);
+#endif
 
 	for (i=0; i<2*N; i++)
 		fprintf (restart, "%f\t%f\t%f\n", x[i][0],x[i][1],x[i][2]);

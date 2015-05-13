@@ -3,7 +3,7 @@
 // scaled cosine btw r0 and rCut	v = 
 // 0 after rCut				v = 0
 
-static float harcos(int i, int j ) {	
+static float harcos(int i, int j, float *c, float *s ) {	
   	float delx,dely,delz,rsq;
 
 	delx = x[i][0] - x[j][0];
@@ -27,12 +27,17 @@ static float harcos(int i, int j ) {
 		rk = K_INTER * dr;
 		fmult = -2.0*rk/r;
 		energy = rk*dr - E_INTER;
+		*c = 1;
+		*s = 0;
 	}
 	// this is the cosine part
 	else { 		
 		rk = M_PI / (CUT_INTER - R_INTER);
-		energy = E_INTER * 0.5 * ( 1 - cos(dr*rk)) - E_INTER;
-		fmult = -E_INTER * 0.5 * rk * sin(dr*rk)/r;
+		*c = cos(dr*rk);
+		*s = sin(dr*rk);
+
+		energy = E_INTER * 0.5 * ( 1 - *c) - E_INTER;
+		fmult = -E_INTER * 0.5 * rk * *s / r;
 	}
 	
 	// apply forces
