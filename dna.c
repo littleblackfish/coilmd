@@ -17,7 +17,7 @@
 
 // integrator parameters
 
-#define DT 0.05
+#define DT 0.1
 #define GAMMA 0.5
 #define MASS 200
 
