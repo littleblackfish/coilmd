@@ -48,7 +48,7 @@
 #define CUT_NEIGH 1.5
 #define MAX_NEIGH 64
 
-#define PITCH 12.3
+#define PITCH 10.6
 
 // global energy variables
 float intraE, interE, angleE, dihedralE, intraHardE, interHardE;
