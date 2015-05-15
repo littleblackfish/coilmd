@@ -33,12 +33,12 @@
 
 // angle parameters
 #define K_ANGLE 5.0
-#define E_ANGLE 0.1
+#define E_ANGLE 0.0
 #define THETA0 1.4 //radians is 80.2 degrees
 
 // dihedral parameters
 #define K_DIHED 1.0
-#define E_DIHED 0.1
+#define E_DIHED 0.0
 
 // non-bonded parameters
 #define N_HC 4
