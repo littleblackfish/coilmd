@@ -51,9 +51,9 @@ static float angle(int i1, int i2 , int i3, float kMult, float dkMult)
 	
 	// last term is the correction for scaling
 	
-	f3[0] = a22*delx2 + a12*delx1 + dkMult*eangle*delx2/r2;
-	f3[1] = a22*dely2 + a12*dely1 + dkMult*eangle*dely2/r2;
-	f3[2] = a22*delz2 + a12*delz1 + dkMult*eangle*delz2/r2;
+	f3[0] = a22*delx2 + a12*delx1 - dkMult*eangle*delx2/r2;
+	f3[1] = a22*dely2 + a12*dely1 - dkMult*eangle*dely2/r2;
+	f3[2] = a22*delz2 + a12*delz1 - dkMult*eangle*delz2/r2;
 	
 	// apply force to each of 3 atoms
 	
