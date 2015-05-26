@@ -1,6 +1,7 @@
 #!/bin/awk -f
 
 # awk script to calculate the dissociation ratio quickly
+# input is the binary dissociation matrix (bubbles.dat)
 
 {
 	s=0;

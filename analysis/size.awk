@@ -1,6 +1,7 @@
 #!/bin/awk -f
 
-# awk script to calculate the dissociation ratio quickly
+# awk script to calculate bubble size distibution
+# input is the dissociation matrix (bubbles.dat)
 
 {
 	inside = 0;
