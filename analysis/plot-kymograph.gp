@@ -1,4 +1,6 @@
 #!/usr/bin/gnuplot -p
+ 
+# gnuplot script to plot a kymograph from a matrix file
 
 #set term pdfcairo enhanced size 1024 ,768
 #set term pngcairo enhanced
