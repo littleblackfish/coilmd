@@ -11,8 +11,7 @@ for N in $2; do
 		cd $type; 
 		for temp in ?.??; do 
 			cd $temp; 
-			qsub -N ${type}${N}-${temp} ${xsubmitfile}
-			$type $N ${temp}; 
+			qsub -N ${type}${N}-${temp} ${xsubmitfile} $type $N ${temp}; 
 			cd ..; 
 		done ; 
 		cd ..; 
