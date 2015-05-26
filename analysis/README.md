@@ -23,6 +23,18 @@ output is usually piped to a file *bubbledist.dat*
 
 `size.awk bubbles.dat > bubblesize.dat`
 
+## Persistence
+
+**persistence.py** requires [MDAnalysis](http://www.mdanalysis.org/) python package.
+
+It reads a *dcd type trajectory* and a *pdb type topology* file. These can be generated from a vtf type trajectory using **save.vmd** vmd script. 
+
+`persistence.py topol.pdb traj.dcd`
+
+Generates a file called persistence.dat that reflects bond correlations among the axis of the polymer. 
+
+**persistence.gp** plots this file and fits an analytical function to extract lambda (pitch) and lp (persistence length). It might be necessary to change the initial conditions in the script to obtain a reasonable fit. 
+
 ## plotting scripts
 
 All plotting scripts make use of gnuplot.
