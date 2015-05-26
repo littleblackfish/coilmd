@@ -19,7 +19,7 @@ The SGE submission scripts are named xsubmit-machine and they take 3 parameters 
 * N (integer)
 * temperature (float)
 
-*loop-submit.sh* is a bash script to sumbit a bulk of jobs. It takes 2parameters which are
+*loop-submit.sh* is a bash script to sumbit a bulk of jobs. It takes 2 parameters which are
 
 * submission script to be used (full path)
-* N
+* N (integer)
