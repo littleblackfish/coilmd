@@ -25,7 +25,7 @@ output is usually piped to a file *bubbledist.dat*
 
 ## Persistence
 
-**persistence.py** requires [MDAnalysis](http://www.mdanalysis.org/) python package.
+[persistence.py] requires [MDAnalysis](http://www.mdanalysis.org/) python package.
 
 It reads a *dcd type trajectory* and a *pdb type topology* file. These can be generated from a vtf type trajectory using **save.vmd** vmd script. 
 
