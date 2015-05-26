@@ -39,13 +39,9 @@ Generates a file called *persistence.dat*.
 
 All plotting scripts make use of gnuplot.
 
-### plot.gp
+* **[plot.gp](plot.gp)** plots all 2 column files matching given pattern using lines.
 
-plots all 2 column files matching given pattern using lines.
-
-### plot-lp.gp
-
-plots all 2 column files matching given pattern using lines and points.
+* **[plot-lp.gp](plot-lp.gp)** plots all 2 column files matching given pattern using lines and points.
 
 ### plot-eb.gp 
 
