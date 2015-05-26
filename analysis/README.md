@@ -1,4 +1,4 @@
-These are some simple anlysis scripts
+These are some simple anlysis scripts. An understanding of the preferred folder hierarchy is necerrary to practically use loopy ones.
 
 # melt.awk
 
