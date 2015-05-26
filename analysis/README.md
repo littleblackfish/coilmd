@@ -8,13 +8,13 @@ It outputs two floating points, first is the dissociation ratio, second is std e
 
 `melt.awk bubbles.dat`
 
-*loop-melt.sh* is a bash loop that uses this script to generate melt.dat for a full set of temperatures. It should be used from the root directory and takes 2 parameters that are N and type. 
+**[loop-melt.sh](loop-melt.sh)** is a bash loop that uses this script to generate melt.dat for a full set of temperatures. It should be used from the root directory and takes 2 parameters that are N and type. For example : 
 
 `loop-melt.sh 50 cir`
 
 generates the file *root/50/cir/melt.dat* which lists dissociation ratios for each temperature of the 50-unit circular system. 
 
-** [size.awk](size.awk) ** takes **bubbles.dat** as input and calculates the bubble size distribution.
+**[size.awk](size.awk)** takes **bubbles.dat** as input and calculates the bubble size distribution.
 
 It outputs a non-normalized (count) histogram, which is usually piped to a file *bubbledist.dat*
 
