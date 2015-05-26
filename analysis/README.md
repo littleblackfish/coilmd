@@ -43,14 +43,8 @@ All plotting scripts make use of gnuplot.
 
 * **[plot-lp.gp](plot-lp.gp)** plots all 2 column files matching given pattern using lines and points.
 
-### plot-eb.gp 
+* **[plot-eb.gp ](plot-eb.gp)** plots all 3-column files that match the given pattern, using 3rd column for error bars.
 
-plots all 3-column files that match the given pattern, using 3rd column for error bars.
-
-### plot-kymograph.gp
-
-plots a plain text matrix file (such as bubbles.dat) as a kymograph. Input must be piped in :
-
-`plot-kymograph.gp < 100/lin/0.18/bubbles.dat`
+* **[plot-kymograph.gp](plot-kymograph.gp)** plots a plain text matrix file (such as bubbles.dat) as a kymograph. Input must be piped in such as : `plot-kymograph.gp < 100/lin/0.18/bubbles.dat`
 
 
