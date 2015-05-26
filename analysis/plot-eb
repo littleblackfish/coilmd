@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# gnuplot scrtipt to plot 3 column files using error bars
 
 command="gnuplot -p -e \"plot "
 

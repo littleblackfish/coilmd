@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# gnuplot script to plot 2 column files using lines AND points
+# script to plot all two column files that match a pattern
 
 command="gnuplot -p -e \"plot "
 
@@ -9,7 +9,7 @@ do
 #  echo $y
   for x in $y*
   do
-    command="$command '$x' w lp,"  
+    command="$command '$x' w l,"  
   done
 
 done
@@ -18,5 +18,5 @@ command=${command%,}\"
 echo $command
 #echo $@
 
-eval $command
+eval "$command &"
 

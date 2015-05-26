@@ -1,5 +1,9 @@
 #!/usr/bin/gnuplot
 
+# gnuplot script to plot and fit persistent length data
+# lambda is pitch
+# lp is persistence length 
+
 set fit quiet
 set xlabel '{/Symbol t} (bases)'
 set ylabel 'C ({/Symbol t})'
@@ -8,7 +12,7 @@ set ylabel 'C ({/Symbol t})'
 f(x)=exp(-x/lp)*(a+(1-a)*cos(2*pi*x/lambda))
 lp=100
 lambda=11
-a=0.5
+a=1
 
 
 fit f(x) 'persistence' via a,lp,lambda
