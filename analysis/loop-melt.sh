@@ -13,6 +13,6 @@ for x in ?.??; do
 	cd $x; 
 	pwd; 
 	awk 'NR%10 == 0' bubbles.dat > bubbles-sparse.dat; 
-	echo $x $(${coilmd}/melt.awk bubbles-sparse.dat) >> ../melt.dat ; 
+	echo $x $(${coilmd}/analysis/melt.awk bubbles-sparse.dat) >> ../melt.dat ; 
 	cd .. ; 
 done
