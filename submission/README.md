@@ -1,8 +1,8 @@
 ## Folder hierarchy
 
-I usually have a root directory that contains all simulation data, let's call it $root. 
+I usually have a root directory that contains all simulation data, let's call it root. 
 
-The folder hierarchy goes like $root/$N/$type/$temp where : 
+The folder hierarchy goes like root/ N / type / temp where :  
 
 * N is the number of repeat unit is the polymer (actual number of particles is 2N)
 * type is **cir** for circular or **lin** for linear systems
