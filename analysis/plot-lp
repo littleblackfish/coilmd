@@ -1,0 +1,21 @@
+#!/bin/bash
+
+
+command="gnuplot -p -e \"plot "
+
+for y in $@
+do
+#  echo $y
+  for x in $y*
+  do
+    command="$command '$x' w lp,"  
+  done
+
+done
+command=${command%,}\"
+
+echo $command
+#echo $@
+
+eval $command
+

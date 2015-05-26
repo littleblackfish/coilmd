@@ -1,0 +1,17 @@
+#!/bin/bash 
+################################################################### 
+# SGE options: 
+# 
+#$ -S /bin/bash 
+#$ -cwd 
+#$ -q biyofiz.q 
+#$ -notify 
+# 
+# end of SGE stuff 
+################################################################### 
+ 
+source /share/apps/intel/parallel_studio_xe_2015/psxevars.sh quiet 
+export OMP_NUM_THREADS=$NSLOTS 
+ 
+~/coilmd/${1}-single $2 2000000000 $3 
+
