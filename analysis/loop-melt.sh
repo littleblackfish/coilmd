@@ -6,13 +6,16 @@ N=$1
 type=$2
 
 cd $N/${type}
+rm melt.dat
 
-$coilmd="~/scratch/coilmd"
+coilmd="~/coilmd"
+command="${coilmd}/analysis/melt.awk "
 
-for x in ?.??; do 
-	cd $x; 
+for temp in ?.??; do 
+	cd ${temp}; 
 	pwd; 
 	awk 'NR%10 == 0' bubbles.dat > bubbles-sparse.dat; 
-	echo $x $(${coilmd}/analysis/melt.awk bubbles-sparse.dat) >> ../melt.dat ; 
+	rate=$(~/coilmd/analysis/melt.awk bubbles-sparse.dat);
+	echo ${temp} ${rate} >> ../melt.dat ; 
 	cd .. ; 
 done
