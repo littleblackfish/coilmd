@@ -25,9 +25,9 @@ output is usually piped to a file *bubbledist.dat*
 
 ## Persistence
 
-[persistence.py](persistence.py) is a python script to calculate bond correlations among the polymer axis. It requires [MDAnalysis](http://www.mdanalysis.org/) python package.
+**[persistence.py](persistence.py)** is a python script to calculate bond correlations among the polymer axis. It requires [MDAnalysis](http://www.mdanalysis.org/) python package.
 
-It reads a *dcd type trajectory* and a *pdb type topology* file. These can be generated from a vtf type trajectory using **save.vmd** vmd script. 
+It reads a **dcd type trajectory** and a **pdb type topology** file. These can be generated from a vtf type trajectory using **[convertDCD.vmd](convertDCD.vmd)** vmd script. 
 
 `persistence.py topol.pdb traj.dcd`
 
