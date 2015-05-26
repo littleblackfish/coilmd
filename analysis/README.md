@@ -1,25 +1,22 @@
 These are some simple anlysis scripts. An understanding of the preferred folder hierarchy is necerrary to practically use loopy ones.
 
-## melt.awk
+## Melting
 
-calculates dissociation ratio. 
-input is *bubbles.dat*
-outputs two floating points, first is the dissociation ratio, second is std error. 
-associated temperature can be extracted from current dir name. 
-output is usually piped to a file called *melt.dat* which then can be plotted via plot-eb.gp
+**[melt.awk](melt.awk)** takes **bubbles.dat** as an input and calculates dissociation ratio. 
 
-`melt.awk bubbles.dat >> ../melt.dat`
+It outputs two floating points, first is the dissociation ratio, second is std error. 
+
+`melt.awk bubbles.dat`
 
 *loop-melt.sh* is a bash loop that uses this script to generate melt.dat for a full set of temperatures. It should be used from the root directory and takes 2 parameters that are N and type. 
 
 `loop-melt.sh 50 cir`
 
-## size.awk
+generates the file *root/50/cir/melt.dat* which lists dissociation ratios for each temperature of the 50-unit circular system. 
 
-calculates bubble size distribution.
-input is *bubbles.dat*
-outputs a non-normalized (count) histogram. 
-output is usually piped to a file *bubbledist.dat*
+** [size.awk](size.awk) ** takes **bubbles.dat** as input and calculates the bubble size distribution.
+
+It outputs a non-normalized (count) histogram, which is usually piped to a file *bubbledist.dat*
 
 `size.awk bubbles.dat > bubblesize.dat`
 
